@@ -2467,11 +2467,11 @@ export type Database = {
         Returns: undefined
       }
       decrypt_oauth_tokens: {
-        Args: { token_id: string }
+        Args: { p_encryption_key?: string; token_id: string }
         Returns: {
           access_token: string
           refresh_token: string
-        }
+        }[]
       }
       emit_event: {
         Args: {
@@ -2501,6 +2501,7 @@ export type Database = {
         Args: {
           p_access_token: string
           p_email_account_id: string
+          p_encryption_key?: string
           p_provider: Database["public"]["Enums"]["provider_type"]
           p_refresh_token: string
           p_scopes: string[]
@@ -2514,6 +2515,7 @@ export type Database = {
           new_access_token: string
           new_expires_at: string
           new_refresh_token: string
+          p_encryption_key?: string
           token_id: string
         }
         Returns: undefined
@@ -2909,196 +2911,200 @@ export const Constants = {
   },
 } as const
 
-// Type aliases for backwards compatibility with existing code
-export type ApiKey = Database['public']['Tables']['api_keys']['Row'];
-export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
-export type BackupCode = Database['public']['Tables']['backup_codes']['Row'];
-export type CalendarEvent = Database['public']['Tables']['calendar_events']['Row'];
-export type CalendarMetadata = Database['public']['Tables']['calendar_metadata']['Row'];
-export type Contact = Database['public']['Tables']['contacts']['Row'];
-export type CustomLabel = Database['public']['Tables']['custom_labels']['Row'];
-export type Draft = Database['public']['Tables']['drafts']['Row'];
-export type EmailAccount = Database['public']['Tables']['email_accounts']['Row'];
-export type EmailRule = Database['public']['Tables']['email_rules']['Row'];
-export type EmailTemplate = Database['public']['Tables']['email_templates']['Row'];
-export type EnterpriseLead = Database['public']['Tables']['enterprise_leads']['Row'];
-export type Event = Database['public']['Tables']['events']['Row'];
-export type FolderMapping = Database['public']['Tables']['folder_mappings']['Row'];
-export type ImpersonateSession = Database['public']['Tables']['impersonate_sessions']['Row'];
-export type Invoice = Database['public']['Tables']['invoices']['Row'];
-export type Message = Database['public']['Tables']['messages']['Row'];
-export type MessageLabel = Database['public']['Tables']['message_labels']['Row'];
-export type Notification = Database['public']['Tables']['notification_queue']['Row'];
-export type OAuthToken = Database['public']['Tables']['oauth_tokens']['Row'];
-export type Organization = Database['public']['Tables']['organizations']['Row'];
-export type OrganizationInvite = Database['public']['Tables']['organization_invites']['Row'];
-export type OrganizationMember = Database['public']['Tables']['organization_members']['Row'];
-export type PaymentMethod = Database['public']['Tables']['payment_methods']['Row'];
-export type PrioritySender = Database['public']['Tables']['priority_senders']['Row'];
-export type RateLimit = Database['public']['Tables']['rate_limits']['Row'];
-export type ScheduledEmail = Database['public']['Tables']['scheduled_emails']['Row'];
-export type SenderGroup = Database['public']['Tables']['sender_groups']['Row'];
-export type Signature = Database['public']['Tables']['signatures']['Row'];
-export type SmsMessage = Database['public']['Tables']['sms_messages']['Row'];
-export type SnoozedEmail = Database['public']['Tables']['snoozed_emails']['Row'];
-export type SpamReport = Database['public']['Tables']['spam_reports']['Row'];
-export type Subscription = Database['public']['Tables']['subscriptions']['Row'];
-export type SyncCheckpoint = Database['public']['Tables']['sync_checkpoints']['Row'];
-export type SystemSetting = Database['public']['Tables']['system_settings']['Row'];
-export type UsageTracking = Database['public']['Tables']['usage_tracking']['Row'];
-export type User = Database['public']['Tables']['users']['Row'];
-export type UserLoginTracking = Database['public']['Tables']['user_login_tracking']['Row'];
-export type UserPreferences = Database['public']['Tables']['user_preferences']['Row'];
-export type Webhook = Database['public']['Tables']['webhooks']['Row'];
-export type WebhookDelivery = Database['public']['Tables']['webhook_deliveries']['Row'];
+// Type Helpers - Table Row Types
+export type ApiKey = Database['public']['Tables']['api_keys']['Row']
+export type ApiKeyInsert = Database['public']['Tables']['api_keys']['Insert']
+export type ApiKeyUpdate = Database['public']['Tables']['api_keys']['Update']
 
-// Insert type aliases (for creating new records)
-export type ApiKeyInsert = Database['public']['Tables']['api_keys']['Insert'];
-export type AuditLogInsert = Database['public']['Tables']['audit_logs']['Insert'];
-export type BackupCodeInsert = Database['public']['Tables']['backup_codes']['Insert'];
-export type CalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert'];
-export type CalendarMetadataInsert = Database['public']['Tables']['calendar_metadata']['Insert'];
-export type ContactInsert = Database['public']['Tables']['contacts']['Insert'];
-export type CustomLabelInsert = Database['public']['Tables']['custom_labels']['Insert'];
-export type DraftInsert = Database['public']['Tables']['drafts']['Insert'];
-export type EmailAccountInsert = Database['public']['Tables']['email_accounts']['Insert'];
-export type EmailRuleInsert = Database['public']['Tables']['email_rules']['Insert'];
-export type EmailTemplateInsert = Database['public']['Tables']['email_templates']['Insert'];
-export type EnterpriseLeadInsert = Database['public']['Tables']['enterprise_leads']['Insert'];
-export type EventInsert = Database['public']['Tables']['events']['Insert'];
-export type FolderMappingInsert = Database['public']['Tables']['folder_mappings']['Insert'];
-export type ImpersonateSessionInsert = Database['public']['Tables']['impersonate_sessions']['Insert'];
-export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
-export type MessageInsert = Database['public']['Tables']['messages']['Insert'];
-export type MessageLabelInsert = Database['public']['Tables']['message_labels']['Insert'];
-export type NotificationInsert = Database['public']['Tables']['notification_queue']['Insert'];
-export type OAuthTokenInsert = Database['public']['Tables']['oauth_tokens']['Insert'];
-export type OrganizationInsert = Database['public']['Tables']['organizations']['Insert'];
-export type OrganizationInviteInsert = Database['public']['Tables']['organization_invites']['Insert'];
-export type OrganizationMemberInsert = Database['public']['Tables']['organization_members']['Insert'];
-export type PaymentMethodInsert = Database['public']['Tables']['payment_methods']['Insert'];
-export type PrioritySenderInsert = Database['public']['Tables']['priority_senders']['Insert'];
-export type RateLimitInsert = Database['public']['Tables']['rate_limits']['Insert'];
-export type ScheduledEmailInsert = Database['public']['Tables']['scheduled_emails']['Insert'];
-export type SenderGroupInsert = Database['public']['Tables']['sender_groups']['Insert'];
-export type SignatureInsert = Database['public']['Tables']['signatures']['Insert'];
-export type SmsMessageInsert = Database['public']['Tables']['sms_messages']['Insert'];
-export type SnoozedEmailInsert = Database['public']['Tables']['snoozed_emails']['Insert'];
-export type SpamReportInsert = Database['public']['Tables']['spam_reports']['Insert'];
-export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert'];
-export type SyncCheckpointInsert = Database['public']['Tables']['sync_checkpoints']['Insert'];
-export type SystemSettingInsert = Database['public']['Tables']['system_settings']['Insert'];
-export type UsageTrackingInsert = Database['public']['Tables']['usage_tracking']['Insert'];
-export type UserInsert = Database['public']['Tables']['users']['Insert'];
-export type UserLoginTrackingInsert = Database['public']['Tables']['user_login_tracking']['Insert'];
-export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert'];
-export type WebhookInsert = Database['public']['Tables']['webhooks']['Insert'];
-export type WebhookDeliveryInsert = Database['public']['Tables']['webhook_deliveries']['Insert'];
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row']
+export type AuditLogInsert = Database['public']['Tables']['audit_logs']['Insert']
+export type AuditLogUpdate = Database['public']['Tables']['audit_logs']['Update']
 
-// Update type aliases (for updating existing records)
-export type ApiKeyUpdate = Database['public']['Tables']['api_keys']['Update'];
-export type AuditLogUpdate = Database['public']['Tables']['audit_logs']['Update'];
-export type BackupCodeUpdate = Database['public']['Tables']['backup_codes']['Update'];
-export type CalendarEventUpdate = Database['public']['Tables']['calendar_events']['Update'];
-export type CalendarMetadataUpdate = Database['public']['Tables']['calendar_metadata']['Update'];
-export type ContactUpdate = Database['public']['Tables']['contacts']['Update'];
-export type CustomLabelUpdate = Database['public']['Tables']['custom_labels']['Update'];
-export type DraftUpdate = Database['public']['Tables']['drafts']['Update'];
-export type EmailAccountUpdate = Database['public']['Tables']['email_accounts']['Update'];
-export type EmailRuleUpdate = Database['public']['Tables']['email_rules']['Update'];
-export type EmailTemplateUpdate = Database['public']['Tables']['email_templates']['Update'];
-export type EnterpriseLeadUpdate = Database['public']['Tables']['enterprise_leads']['Update'];
-export type EventUpdate = Database['public']['Tables']['events']['Update'];
-export type FolderMappingUpdate = Database['public']['Tables']['folder_mappings']['Update'];
-export type ImpersonateSessionUpdate = Database['public']['Tables']['impersonate_sessions']['Update'];
-export type InvoiceUpdate = Database['public']['Tables']['invoices']['Update'];
-export type MessageUpdate = Database['public']['Tables']['messages']['Update'];
-export type MessageLabelUpdate = Database['public']['Tables']['message_labels']['Update'];
-export type NotificationUpdate = Database['public']['Tables']['notification_queue']['Update'];
-export type OAuthTokenUpdate = Database['public']['Tables']['oauth_tokens']['Update'];
-export type OrganizationUpdate = Database['public']['Tables']['organizations']['Update'];
-export type OrganizationInviteUpdate = Database['public']['Tables']['organization_invites']['Update'];
-export type OrganizationMemberUpdate = Database['public']['Tables']['organization_members']['Update'];
-export type PaymentMethodUpdate = Database['public']['Tables']['payment_methods']['Update'];
-export type PrioritySenderUpdate = Database['public']['Tables']['priority_senders']['Update'];
-export type RateLimitUpdate = Database['public']['Tables']['rate_limits']['Update'];
-export type ScheduledEmailUpdate = Database['public']['Tables']['scheduled_emails']['Update'];
-export type SenderGroupUpdate = Database['public']['Tables']['sender_groups']['Update'];
-export type SignatureUpdate = Database['public']['Tables']['signatures']['Update'];
-export type SmsMessageUpdate = Database['public']['Tables']['sms_messages']['Update'];
-export type SnoozedEmailUpdate = Database['public']['Tables']['snoozed_emails']['Update'];
-export type SpamReportUpdate = Database['public']['Tables']['spam_reports']['Update'];
-export type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update'];
-export type SyncCheckpointUpdate = Database['public']['Tables']['sync_checkpoints']['Update'];
-export type SystemSettingUpdate = Database['public']['Tables']['system_settings']['Update'];
-export type UsageTrackingUpdate = Database['public']['Tables']['usage_tracking']['Update'];
-export type UserUpdate = Database['public']['Tables']['users']['Update'];
-export type UserLoginTrackingUpdate = Database['public']['Tables']['user_login_tracking']['Update'];
-export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update'];
-export type WebhookUpdate = Database['public']['Tables']['webhooks']['Update'];
-export type WebhookDeliveryUpdate = Database['public']['Tables']['webhook_deliveries']['Update'];
+export type BackupCode = Database['public']['Tables']['backup_codes']['Row']
+export type BackupCodeInsert = Database['public']['Tables']['backup_codes']['Insert']
+export type BackupCodeUpdate = Database['public']['Tables']['backup_codes']['Update']
 
-// Enum type aliases
-export type AuditAction = Database['public']['Enums']['audit_action'];
-export type EmailStatus = Database['public']['Enums']['email_status'];
-export type EventRsvp = Database['public']['Enums']['event_rsvp'];
-export type EventType = Database['public']['Enums']['event_type'];
-export type FolderType = Database['public']['Enums']['folder_type'];
-export type InviteStatus = Database['public']['Enums']['invite_status'];
-export type InvoiceStatus = Database['public']['Enums']['invoice_status'];
-export type NotificationType = Database['public']['Enums']['notification_type'];
-export type PlanType = Database['public']['Enums']['plan_type'];
-export type ProviderType = Database['public']['Enums']['provider_type'];
-export type SubscriptionStatus = Database['public']['Enums']['subscription_status'];
-export type SyncStatus = Database['public']['Enums']['sync_status'];
-export type UserRole = Database['public']['Enums']['user_role'];
+export type CalendarEvent = Database['public']['Tables']['calendar_events']['Row']
+export type CalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert']
+export type CalendarEventUpdate = Database['public']['Tables']['calendar_events']['Update']
 
-// Custom JSON types for calendar events
-export type CalendarAttendee = {
-  email: string;
-  name: string | null;
-  status?: 'accepted' | 'declined' | 'tentative' | 'needsAction';
-};
+export type CalendarMetadata = Database['public']['Tables']['calendar_metadata']['Row']
+export type CalendarMetadataInsert = Database['public']['Tables']['calendar_metadata']['Insert']
+export type CalendarMetadataUpdate = Database['public']['Tables']['calendar_metadata']['Update']
 
-export type CalendarReminder = {
-  method: 'email' | 'popup' | 'sms';
-  minutes_before: number;
-};
+// CalendarAttendee and CalendarReminder are stored as JSON in calendar_events table
+export type CalendarAttendee = any // TODO: Define proper type from calendar_events.attendees JSON
+export type CalendarReminder = any // TODO: Define proper type from calendar_events.reminders JSON
 
-// Custom JSON types for email messages and drafts
-export type EmailRecipient = {
-  email: string;
-  name?: string | null;
-};
+export type Contact = Database['public']['Tables']['contacts']['Row']
+export type ContactInsert = Database['public']['Tables']['contacts']['Insert']
+export type ContactUpdate = Database['public']['Tables']['contacts']['Update']
 
-export type EmailAttachment = {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  content_id?: string | null;
-};
+export type CustomLabel = Database['public']['Tables']['custom_labels']['Row']
+export type CustomLabelInsert = Database['public']['Tables']['custom_labels']['Insert']
+export type CustomLabelUpdate = Database['public']['Tables']['custom_labels']['Update']
 
-// Custom JSON types for email rules
-export type EmailRuleCondition = {
-  field: string;
-  operator: 'equals' | 'contains' | 'starts_with' | 'ends_with' | 'regex';
-  value: string;
-};
+export type Draft = Database['public']['Tables']['drafts']['Row']
+export type DraftInsert = Database['public']['Tables']['drafts']['Insert']
+export type DraftUpdate = Database['public']['Tables']['drafts']['Update']
 
-export type EmailRuleAction = {
-  type: string;
-  value?: string | null;
-};
+export type EmailAccount = Database['public']['Tables']['email_accounts']['Row']
+export type EmailAccountInsert = Database['public']['Tables']['email_accounts']['Insert']
+export type EmailAccountUpdate = Database['public']['Tables']['email_accounts']['Update']
 
-// Custom JSON types for user preferences
-export type NotificationSchedule = {
-  enabled: boolean;
-  quiet_hours_start?: string | null;
-  quiet_hours_end?: string | null;
-};
+// EmailAttachment and EmailRecipient are stored as JSON in messages table or don't exist yet
+export type EmailAttachment = any // TODO: Define proper type or create table
+export type EmailRecipient = any // TODO: Define proper type or create table
 
-export type SwipeActions = {
-  left?: string | null;
-  right?: string | null;
-};
+export type EmailRule = Database['public']['Tables']['email_rules']['Row']
+export type EmailRuleInsert = Database['public']['Tables']['email_rules']['Insert']
+export type EmailRuleUpdate = Database['public']['Tables']['email_rules']['Update']
+
+// EmailRuleAction and EmailRuleCondition are stored as JSON in email_rules table
+export type EmailRuleAction = any // TODO: Define proper type from email_rules.actions JSON
+export type EmailRuleCondition = any // TODO: Define proper type from email_rules.conditions JSON
+
+// EmailStatus might be stored differently or doesn't exist yet
+export type EmailStatus = any // TODO: Define proper type or create table
+
+export type EmailTemplate = Database['public']['Tables']['email_templates']['Row']
+export type EmailTemplateInsert = Database['public']['Tables']['email_templates']['Insert']
+export type EmailTemplateUpdate = Database['public']['Tables']['email_templates']['Update']
+
+export type EnterpriseLead = Database['public']['Tables']['enterprise_leads']['Row']
+export type EnterpriseLeadInsert = Database['public']['Tables']['enterprise_leads']['Insert']
+export type EnterpriseLeadUpdate = Database['public']['Tables']['enterprise_leads']['Update']
+
+// EventRsvp is stored as enum in calendar_events.rsvp_status
+export type EventRsvp = Database['public']['Enums']['event_rsvp']
+
+export type FolderMapping = Database['public']['Tables']['folder_mappings']['Row']
+export type FolderMappingInsert = Database['public']['Tables']['folder_mappings']['Insert']
+export type FolderMappingUpdate = Database['public']['Tables']['folder_mappings']['Update']
+
+export type ImpersonateSession = Database['public']['Tables']['impersonate_sessions']['Row']
+export type ImpersonateSessionInsert = Database['public']['Tables']['impersonate_sessions']['Insert']
+export type ImpersonateSessionUpdate = Database['public']['Tables']['impersonate_sessions']['Update']
+
+export type Invoice = Database['public']['Tables']['invoices']['Row']
+export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert']
+export type InvoiceUpdate = Database['public']['Tables']['invoices']['Update']
+
+export type Message = Database['public']['Tables']['messages']['Row']
+export type MessageInsert = Database['public']['Tables']['messages']['Insert']
+export type MessageUpdate = Database['public']['Tables']['messages']['Update']
+
+export type MessageLabel = Database['public']['Tables']['message_labels']['Row']
+export type MessageLabelInsert = Database['public']['Tables']['message_labels']['Insert']
+export type MessageLabelUpdate = Database['public']['Tables']['message_labels']['Update']
+
+// Notification table is named notification_queue
+export type Notification = Database['public']['Tables']['notification_queue']['Row']
+export type NotificationInsert = Database['public']['Tables']['notification_queue']['Insert']
+export type NotificationUpdate = Database['public']['Tables']['notification_queue']['Update']
+
+// NotificationSchedule doesn't exist as separate table
+export type NotificationSchedule = any // TODO: Define proper type or create table
+
+export type OAuthToken = Database['public']['Tables']['oauth_tokens']['Row']
+export type OAuthTokenInsert = Database['public']['Tables']['oauth_tokens']['Insert']
+export type OAuthTokenUpdate = Database['public']['Tables']['oauth_tokens']['Update']
+
+export type Organization = Database['public']['Tables']['organizations']['Row']
+export type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
+export type OrganizationUpdate = Database['public']['Tables']['organizations']['Update']
+
+export type OrganizationInvite = Database['public']['Tables']['organization_invites']['Row']
+export type OrganizationInviteInsert = Database['public']['Tables']['organization_invites']['Insert']
+export type OrganizationInviteUpdate = Database['public']['Tables']['organization_invites']['Update']
+
+export type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
+export type OrganizationMemberInsert = Database['public']['Tables']['organization_members']['Insert']
+export type OrganizationMemberUpdate = Database['public']['Tables']['organization_members']['Update']
+
+export type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
+export type PaymentMethodInsert = Database['public']['Tables']['payment_methods']['Insert']
+export type PaymentMethodUpdate = Database['public']['Tables']['payment_methods']['Update']
+
+export type PrioritySender = Database['public']['Tables']['priority_senders']['Row']
+export type PrioritySenderInsert = Database['public']['Tables']['priority_senders']['Insert']
+export type PrioritySenderUpdate = Database['public']['Tables']['priority_senders']['Update']
+
+export type RateLimit = Database['public']['Tables']['rate_limits']['Row']
+export type RateLimitInsert = Database['public']['Tables']['rate_limits']['Insert']
+export type RateLimitUpdate = Database['public']['Tables']['rate_limits']['Update']
+
+export type ScheduledEmail = Database['public']['Tables']['scheduled_emails']['Row']
+export type ScheduledEmailInsert = Database['public']['Tables']['scheduled_emails']['Insert']
+export type ScheduledEmailUpdate = Database['public']['Tables']['scheduled_emails']['Update']
+
+export type SenderGroup = Database['public']['Tables']['sender_groups']['Row']
+export type SenderGroupInsert = Database['public']['Tables']['sender_groups']['Insert']
+export type SenderGroupUpdate = Database['public']['Tables']['sender_groups']['Update']
+
+export type Signature = Database['public']['Tables']['signatures']['Row']
+export type SignatureInsert = Database['public']['Tables']['signatures']['Insert']
+export type SignatureUpdate = Database['public']['Tables']['signatures']['Update']
+
+export type SmsMessage = Database['public']['Tables']['sms_messages']['Row']
+export type SmsMessageInsert = Database['public']['Tables']['sms_messages']['Insert']
+export type SmsMessageUpdate = Database['public']['Tables']['sms_messages']['Update']
+
+export type SnoozedEmail = Database['public']['Tables']['snoozed_emails']['Row']
+export type SnoozedEmailInsert = Database['public']['Tables']['snoozed_emails']['Insert']
+export type SnoozedEmailUpdate = Database['public']['Tables']['snoozed_emails']['Update']
+
+export type SpamReport = Database['public']['Tables']['spam_reports']['Row']
+export type SpamReportInsert = Database['public']['Tables']['spam_reports']['Insert']
+export type SpamReportUpdate = Database['public']['Tables']['spam_reports']['Update']
+
+export type Subscription = Database['public']['Tables']['subscriptions']['Row']
+export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert']
+export type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update']
+
+// SwipeActions doesn't exist as table (may be in user_preferences JSON)
+export type SwipeActions = any // TODO: Define proper type from user_preferences
+
+export type SyncCheckpoint = Database['public']['Tables']['sync_checkpoints']['Row']
+export type SyncCheckpointInsert = Database['public']['Tables']['sync_checkpoints']['Insert']
+export type SyncCheckpointUpdate = Database['public']['Tables']['sync_checkpoints']['Update']
+
+export type SystemSetting = Database['public']['Tables']['system_settings']['Row']
+export type SystemSettingInsert = Database['public']['Tables']['system_settings']['Insert']
+export type SystemSettingUpdate = Database['public']['Tables']['system_settings']['Update']
+
+export type UsageTracking = Database['public']['Tables']['usage_tracking']['Row']
+export type UsageTrackingInsert = Database['public']['Tables']['usage_tracking']['Insert']
+export type UsageTrackingUpdate = Database['public']['Tables']['usage_tracking']['Update']
+
+export type User = Database['public']['Tables']['users']['Row']
+export type UserInsert = Database['public']['Tables']['users']['Insert']
+export type UserUpdate = Database['public']['Tables']['users']['Update']
+
+export type UserLoginTracking = Database['public']['Tables']['user_login_tracking']['Row']
+export type UserLoginTrackingInsert = Database['public']['Tables']['user_login_tracking']['Insert']
+export type UserLoginTrackingUpdate = Database['public']['Tables']['user_login_tracking']['Update']
+
+export type UserPreferences = Database['public']['Tables']['user_preferences']['Row']
+export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
+export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update']
+
+export type Webhook = Database['public']['Tables']['webhooks']['Row']
+export type WebhookInsert = Database['public']['Tables']['webhooks']['Insert']
+export type WebhookUpdate = Database['public']['Tables']['webhooks']['Update']
+
+export type WebhookDelivery = Database['public']['Tables']['webhook_deliveries']['Row']
+export type WebhookDeliveryInsert = Database['public']['Tables']['webhook_deliveries']['Insert']
+export type WebhookDeliveryUpdate = Database['public']['Tables']['webhook_deliveries']['Update']
+
+// Enum Types
+export type AuditAction = Database['public']['Enums']['audit_action']
+export type FolderType = Database['public']['Enums']['folder_type']
+export type InviteStatus = Database['public']['Enums']['invite_status']
+export type InvoiceStatus = Database['public']['Enums']['invoice_status']
+export type NotificationType = Database['public']['Enums']['notification_type']
+export type PlanType = Database['public']['Enums']['plan_type']
+export type ProviderType = Database['public']['Enums']['provider_type']
+export type SubscriptionStatus = Database['public']['Enums']['subscription_status']
+export type SyncStatus = Database['public']['Enums']['sync_status']
+export type UserRole = Database['public']['Enums']['user_role']
