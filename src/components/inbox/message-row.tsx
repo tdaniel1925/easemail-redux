@@ -8,9 +8,10 @@ import type { Message } from '@/types/message';
 interface MessageRowProps {
   message: Message;
   isPriority?: boolean;
+  threadCount?: number;
 }
 
-export function MessageRow({ message, isPriority }: MessageRowProps) {
+export function MessageRow({ message, isPriority, threadCount }: MessageRowProps) {
   const router = useRouter();
 
   function handleClick() {
@@ -82,14 +83,21 @@ export function MessageRow({ message, isPriority }: MessageRowProps) {
         </div>
 
         {/* Subject */}
-        <p
-          className={cn(
-            'truncate text-sm',
-            message.is_unread ? 'font-medium' : 'text-muted-foreground'
+        <div className="flex items-center gap-2">
+          <p
+            className={cn(
+              'truncate text-sm',
+              message.is_unread ? 'font-medium' : 'text-muted-foreground'
+            )}
+          >
+            {message.subject || '(no subject)'}
+          </p>
+          {threadCount && threadCount > 1 && (
+            <span className="flex-shrink-0 text-xs text-muted-foreground">
+              ({threadCount})
+            </span>
           )}
-        >
-          {message.subject || '(no subject)'}
-        </p>
+        </div>
 
         {/* Snippet */}
         <p className="truncate text-xs text-muted-foreground">

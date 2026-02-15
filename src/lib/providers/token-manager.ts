@@ -29,6 +29,8 @@ export async function getValidToken(
   const supabase = await createServiceClient();
 
   try {
+    console.warn('🔐 getValidToken: Fetching token for account:', emailAccountId);
+
     // Start a transaction with row-level lock
     const { data: tokenData, error: fetchError } = await supabase
       .from('oauth_tokens')
@@ -46,12 +48,23 @@ export async function getValidToken(
       .eq('email_account_id', emailAccountId)
       .single();
 
-    if (fetchError || !tokenData) {
+    if (fetchError) {
+      console.error('❌ Token fetch error:', fetchError);
+      return {
+        token: '',
+        error: `Token fetch error: ${fetchError.message}`,
+      };
+    }
+
+    if (!tokenData) {
+      console.error('❌ Token not found in database');
       return {
         token: '',
         error: 'Token not found',
       };
     }
+
+    console.warn('✅ Token row found, attempting to decrypt...');
 
     // Decrypt tokens (tokens are stored encrypted with pgcrypto)
     const { data: decryptedData, error: decryptError } = await supabase.rpc(
@@ -62,10 +75,40 @@ export async function getValidToken(
       }
     );
 
-    if (decryptError || !decryptedData) {
+    if (decryptError) {
+      console.error('❌ Token decryption error:', decryptError);
+      return {
+        token: '',
+        error: `Decryption failed: ${decryptError.message}`,
+      };
+    }
+
+    if (!decryptedData) {
+      console.error('❌ Decrypted data is null');
       return {
         token: '',
         error: 'Failed to decrypt tokens',
+      };
+    }
+
+    console.warn('✅ Token decrypted successfully');
+    console.warn('📦 Decrypted data structure:', JSON.stringify(decryptedData, null, 2));
+
+    // RPC functions return arrays, so get the first element
+    const tokens = Array.isArray(decryptedData) ? decryptedData[0] : decryptedData;
+
+    console.warn('🔍 Tokens object keys:', tokens ? Object.keys(tokens) : 'null');
+    console.warn('🔍 Tokens object:', tokens);
+    console.warn('🔑 Access token exists:', !!tokens?.access_token);
+    console.warn('🔄 Refresh token exists:', !!tokens?.refresh_token);
+    console.warn('🔑 Access token value (first 50 chars):', tokens?.access_token?.substring(0, 50));
+
+    if (!tokens || !tokens.access_token) {
+      console.error('❌ Tokens object is invalid:', tokens);
+      console.error('❌ Keys in tokens object:', tokens ? Object.keys(tokens) : 'null');
+      return {
+        token: '',
+        error: 'Invalid token structure',
       };
     }
 
@@ -73,12 +116,16 @@ export async function getValidToken(
     const now = new Date();
     const timeUntilExpiry = expiresAt.getTime() - now.getTime();
 
+    console.warn('⏰ Token expires at:', expiresAt.toISOString());
+    console.warn('⏱️ Time until expiry:', Math.floor(timeUntilExpiry / 1000), 'seconds');
+    console.warn('⚠️ Needs refresh:', timeUntilExpiry < TOKEN_REFRESH_THRESHOLD_MS);
+
     // Check if token needs refresh (expired or about to expire in 5 minutes)
     if (timeUntilExpiry < TOKEN_REFRESH_THRESHOLD_MS) {
       // Refresh the token
       try {
         const provider = getProvider(tokenData.provider as ProviderType);
-        const newTokens = await provider.refreshToken(decryptedData.refresh_token);
+        const newTokens = await provider.refreshToken(tokens.refresh_token);
 
         // Calculate new expiry time
         const newExpiresAt = new Date(
@@ -98,7 +145,7 @@ export async function getValidToken(
           console.error('Failed to update tokens:', updateError);
           // Fall back to existing token if update fails
           return {
-            token: decryptedData.access_token,
+            token: tokens.access_token,
           };
         }
 
@@ -136,11 +183,14 @@ export async function getValidToken(
     }
 
     // Token is still valid
+    console.warn('✅ Returning valid token (not expired)');
+    console.warn('🎫 Token value exists:', !!tokens.access_token);
+
     return {
-      token: decryptedData.access_token,
+      token: tokens.access_token,
     };
   } catch (error: any) {
-    console.error('getValidToken error:', error);
+    console.error('💥 getValidToken error:', error);
     return {
       token: '',
       error: error.message || 'Unknown error',
@@ -163,6 +213,11 @@ export async function storeTokens(params: {
   const supabase = await createServiceClient();
 
   try {
+    console.warn('💾 storeTokens: Storing tokens for account:', params.emailAccountId);
+    console.warn('  Provider:', params.provider);
+    console.warn('  Scopes:', params.scopes);
+    console.warn('  Expires in:', params.expiresIn, 'seconds');
+
     const expiresAt = new Date(Date.now() + params.expiresIn * 1000).toISOString();
 
     // Use RPC function to encrypt and store tokens
@@ -178,18 +233,20 @@ export async function storeTokens(params: {
     });
 
     if (error) {
-      console.error('Failed to store tokens:', error);
+      console.error('❌ Failed to store tokens:', error);
       return {
         success: false,
         error: error.message,
       };
     }
 
+    console.warn('✅ Tokens stored successfully');
+
     return {
       success: true,
     };
   } catch (error: any) {
-    console.error('storeTokens error:', error);
+    console.error('💥 storeTokens error:', error);
     return {
       success: false,
       error: error.message || 'Unknown error',

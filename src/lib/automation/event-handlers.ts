@@ -94,7 +94,7 @@ export async function handleSnoozeExpired(
 ): Promise<void> {
   const supabase = await createClient();
 
-  // Get snoozed email record
+  // Get snoozed email record with message details
   const { data: snoozed } = await supabase
     .from('snoozed_emails')
     .select('message_id, original_folder_type')
@@ -103,6 +103,14 @@ export async function handleSnoozeExpired(
     .single();
 
   if (!snoozed) return;
+
+  // Get message to retrieve email_account_id
+  const { data: message } = await supabase
+    .from('messages')
+    .select('email_account_id')
+    .eq('id', snoozed.message_id)
+    .eq('user_id', userId)
+    .single();
 
   // Move back to original folder and mark unread
   await supabase
@@ -123,6 +131,7 @@ export async function handleSnoozeExpired(
   // Create notification
   await supabase.from('notification_queue').insert({
     user_id: userId,
+    email_account_id: message?.email_account_id || null,
     type: 'info',
     title: 'Snoozed Email Returned',
     message: 'A snoozed email has returned to your inbox',
@@ -167,6 +176,7 @@ export async function handleSyncError(
   if (errorCount >= 3) {
     await supabase.from('notification_queue').insert({
       user_id: userId,
+      email_account_id: emailAccountId,
       type: 'error',
       title: 'Email Sync Error',
       message: `Sync failed ${errorCount} times. Please check your email account connection.`,
@@ -241,6 +251,7 @@ export async function handleTokenRefreshFailed(
   // Notify user
   await supabase.from('notification_queue').insert({
     user_id: userId,
+    email_account_id: emailAccountId,
     type: 'error',
     title: 'Email Account Error',
     message: 'Your email account connection expired. Please reconnect.',

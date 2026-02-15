@@ -19,10 +19,12 @@ import { handleMessageReceived } from '@/lib/automation/event-handlers';
 export async function performInitialSync(
   emailAccountId: string
 ): Promise<{ success: boolean; error?: string }> {
+  console.warn('📧 performInitialSync called for:', emailAccountId);
   const supabase = await createServiceClient();
 
   try {
     // Get email account details
+    console.warn('📊 Fetching email account details...');
     const { data: account, error: accountError } = await supabase
       .from('email_accounts')
       .select('*')
@@ -30,15 +32,20 @@ export async function performInitialSync(
       .single();
 
     if (accountError || !account) {
+      console.error('❌ Account not found:', accountError);
       return { success: false, error: 'Account not found' };
     }
 
+    console.warn('✅ Found account:', account.email, 'Status:', account.sync_status);
+
     // RACE CONDITION PROTECTION: Check if already syncing
     if (account.sync_status === 'syncing') {
+      console.warn('⚠️ Sync already in progress');
       return { success: false, error: 'Sync already in progress' };
     }
 
     // Set status to syncing to prevent concurrent syncs
+    console.warn('🔄 Setting sync_status to syncing...');
     await supabase
       .from('email_accounts')
       .update({
@@ -48,10 +55,13 @@ export async function performInitialSync(
       .eq('id', emailAccountId);
 
     // Get valid token
+    console.warn('🔑 Getting valid token...');
     const tokenResult = await getValidToken(emailAccountId);
     if (!tokenResult.token) {
+      console.error('❌ Failed to get token:', tokenResult.error);
       return { success: false, error: tokenResult.error || 'Invalid token' };
     }
+    console.warn('✅ Token retrieved successfully');
 
     const provider = getProvider(account.provider as any);
 
@@ -125,6 +135,11 @@ export async function performInitialSync(
 
         // Sync messages from this page
         for (const message of messages) {
+          // Override folder_type from folder_mappings to ensure correctness
+          // The provider may not always correctly determine folder_type from folder ID
+          message.folder_type = folder.folder_type;
+          message.folder_id = folder.provider_folder_id;
+
           await syncMessage(supabase, account, message);
           folderMessageCount++;
           totalSynced++;

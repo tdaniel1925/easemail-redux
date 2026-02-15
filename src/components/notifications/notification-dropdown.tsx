@@ -2,20 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BellOff, Check } from 'lucide-react';
+import { BellOff, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
 import type { Notification } from '@/types/notification';
+import type { EmailAccount } from '@/types/database';
 
 interface NotificationDropdownProps {
   onClose: () => void;
 }
 
+type NotificationWithAccount = Notification & {
+  email_account?: EmailAccount | null;
+};
+
 export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationWithAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,11 +31,14 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
     const supabase = createClient();
     const { data } = await supabase
       .from('notification_queue')
-      .select('*')
+      .select(`
+        *,
+        email_account:email_accounts(id, email, provider)
+      `)
       .order('created_at', { ascending: false })
       .limit(20);
 
-    setNotifications((data as Notification[]) || []);
+    setNotifications((data as unknown as NotificationWithAccount[]) || []);
     setLoading(false);
   }
 
@@ -60,10 +68,16 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }
 
-  function handleNotificationClick(notification: Notification) {
+  function handleNotificationClick(notification: NotificationWithAccount) {
     markAsRead(notification.id);
     if (notification.link) {
-      router.push(notification.link);
+      // If notification has an associated account, include it in the URL
+      let targetUrl = notification.link;
+      if (notification.email_account?.id) {
+        const separator = notification.link.includes('?') ? '&' : '?';
+        targetUrl = `${notification.link}${separator}accountId=${notification.email_account.id}`;
+      }
+      router.push(targetUrl);
       onClose();
     }
   }
@@ -128,7 +142,7 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
               <p className="text-xs text-muted-foreground">
                 {notification.message}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge
                   variant={
                     notification.type === 'error'
@@ -141,6 +155,12 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
                 >
                   {notification.type}
                 </Badge>
+                {notification.email_account && (
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Mail className="h-3 w-3" />
+                    <span>{notification.email_account.email}</span>
+                  </div>
+                )}
                 <span className="text-[10px] text-muted-foreground">
                   {notification.created_at ? formatTime(notification.created_at) : 'Unknown'}
                 </span>

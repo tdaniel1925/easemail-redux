@@ -5,12 +5,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { PageHeader } from '@/components/layout/page-header';
-import { SmartInbox } from '@/components/inbox/smart-inbox';
-import { RefreshButton } from '@/components/inbox/refresh-button';
-import { Card } from '@/components/ui/card';
-import { EmptyState } from '@/components/layout/empty-state';
-import { Inbox } from 'lucide-react';
+import { InboxContent } from './inbox-content';
+import { fixFolderTypes } from '@/lib/sync/fix-folder-types';
 
 export default async function InboxPage() {
   const supabase = await createClient();
@@ -23,40 +19,24 @@ export default async function InboxPage() {
     redirect('/auth/signin');
   }
 
-  // Check if user has any messages
-  const { count } = await supabase
-    .from('messages')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('folder_type', 'inbox');
+  // Get user's email accounts and fix folder types (one-time migration)
+  console.warn('📧 Inbox page: Fetching email accounts for user:', user.id);
+  const { data: accounts, error: accountsError } = await supabase
+    .from('email_accounts')
+    .select('id')
+    .eq('user_id', user.id);
 
-  const hasMessages = (count || 0) > 0;
+  console.warn('📧 Accounts query result:', { accounts, accountsError });
 
-  return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <PageHeader
-          title="Inbox"
-          description="Your incoming messages organized by priority"
-        />
-        <RefreshButton userId={user.id} />
-      </div>
+  if (accounts && accounts.length > 0) {
+    console.warn(`✅ Found ${accounts.length} email account(s), running fixFolderTypes`);
+    for (const account of accounts) {
+      const result = await fixFolderTypes(account.id);
+      console.warn('🔧 fixFolderTypes result:', result);
+    }
+  } else {
+    console.warn('❌ No email accounts found');
+  }
 
-      {hasMessages ? (
-        <SmartInbox userId={user.id} />
-      ) : (
-        <Card className="p-6">
-          <EmptyState
-            icon={<Inbox className="h-12 w-12" />}
-            title="No messages in inbox"
-            description="Connect an email account to start syncing messages"
-            action={{
-              label: "Connect Email Account",
-              href: "/app/settings"
-            }}
-          />
-        </Card>
-      )}
-    </div>
-  );
+  return <InboxContent userId={user.id} />;
 }

@@ -9,12 +9,14 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { signIn, signInWithMagicLink } from '@/lib/auth/actions';
 
 const signInSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional(),
 });
 
 type SignInFormData = z.infer<typeof signInSchema>;
@@ -42,7 +44,7 @@ export function SignInForm() {
     setIsLoading(true);
 
     try {
-      const result = await signIn(data.email, data.password);
+      const result = await signIn(data.email, data.password, data.rememberMe);
 
       if (result.error) {
         toast.error(result.error);
@@ -138,6 +140,20 @@ export function SignInForm() {
           {errors.password && (
             <p className="text-sm text-destructive">{errors.password.message}</p>
           )}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="rememberMe"
+            {...register('rememberMe')}
+            disabled={isLoading}
+          />
+          <Label
+            htmlFor="rememberMe"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Remember me
+          </Label>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>

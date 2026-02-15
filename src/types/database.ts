@@ -2300,7 +2300,9 @@ export type Database = {
           nickname: string | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
+          remember_me: boolean | null
           role: Database["public"]["Enums"]["user_role"] | null
+          session_expires_at: string | null
           timezone: string | null
           two_factor_enabled: boolean | null
           two_factor_secret: string | null
@@ -2321,7 +2323,9 @@ export type Database = {
           nickname?: string | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          remember_me?: boolean | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          session_expires_at?: string | null
           timezone?: string | null
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null
@@ -2342,7 +2346,9 @@ export type Database = {
           nickname?: string | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          remember_me?: boolean | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          session_expires_at?: string | null
           timezone?: string | null
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null

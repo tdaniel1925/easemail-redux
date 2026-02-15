@@ -1,24 +1,28 @@
-/**
- * Sent Messages Page
- */
-
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
-import { Card } from '@/components/ui/card';
-import { EmptyState } from '@/components/layout/empty-state';
-import { Send } from 'lucide-react';
+import { FolderView } from '@/components/inbox/folder-view';
 
 export default async function SentPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/auth/signin');
+  }
+
   return (
     <div className="p-8">
-      <PageHeader title="Sent" description="Messages you've sent" />
-
-      <Card className="p-6">
-        <EmptyState
-          icon={<Send className="h-12 w-12" />}
-          title="No sent messages"
-          description="Messages will sync from your connected email accounts (Stage 4)"
-        />
-      </Card>
+      <PageHeader
+        title="Sent"
+        description="Sent messages"
+      />
+      <div className="mt-6">
+        <FolderView userId={user.id} folderType="sent" />
+      </div>
     </div>
   );
 }

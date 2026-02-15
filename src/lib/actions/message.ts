@@ -220,15 +220,29 @@ export async function bulkUpdateMessages(input: BulkUpdateMessagesInput): Promis
   }
 }
 
-export async function searchMessages(query: string, limit = 50): Promise<ActionResult<Message[]>> {
+export async function searchMessages(
+  query: string,
+  options?: {
+    limit?: number;
+    email_account_id?: string;
+  }
+): Promise<ActionResult<Message[]>> {
   try {
     const perms = await requireAuth();
+    const limit = options?.limit || 50;
 
     const supabase = await createClient();
-    const { data, error } = await supabase
+    let dbQuery = supabase
       .from('messages')
       .select('*')
-      .eq('user_id', perms.userId)
+      .eq('user_id', perms.userId);
+
+    // Filter by email account if specified
+    if (options?.email_account_id) {
+      dbQuery = dbQuery.eq('email_account_id', options.email_account_id);
+    }
+
+    const { data, error } = await dbQuery
       .textSearch('fts', query, { type: 'websearch' })
       .order('message_date', { ascending: false })
       .limit(limit);

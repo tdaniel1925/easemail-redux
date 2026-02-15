@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getProvider } from '@/lib/providers';
+import { ClearTestDataSection } from '@/components/settings/clear-test-data-section';
 import crypto from 'crypto';
 
 async function generatePKCE() {
@@ -115,6 +116,7 @@ export default async function SettingsPage({
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="accounts">Email Accounts</TabsTrigger>
+          <TabsTrigger value="developer">Developer</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -280,6 +282,20 @@ export default async function SettingsPage({
                 </Card>
               </>
             )}
+          </div>
+        </TabsContent>
+
+        {/* Developer Tab */}
+        <TabsContent value="developer">
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Developer Tools</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Tools for testing and development. Use with caution.
+              </p>
+            </Card>
+
+            <ClearTestDataSection />
           </div>
         </TabsContent>
       </Tabs>

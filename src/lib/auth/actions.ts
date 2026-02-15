@@ -11,7 +11,7 @@ interface AuthResult {
   success?: boolean;
 }
 
-export async function signIn(email: string, password: string): Promise<AuthResult> {
+export async function signIn(email: string, password: string, rememberMe?: boolean): Promise<AuthResult> {
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -30,6 +30,22 @@ export async function signIn(email: string, password: string): Promise<AuthResul
 
   if (!data.user) {
     return { error: 'Failed to sign in' };
+  }
+
+  // Update user's remember_me preference and set session expiry
+  if (rememberMe !== undefined) {
+    const now = new Date();
+    const expiresAt = rememberMe
+      ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000) // 90 days
+      : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await supabase
+      .from('users')
+      .update({
+        remember_me: rememberMe,
+        session_expires_at: expiresAt.toISOString(),
+      })
+      .eq('id', data.user.id);
   }
 
   // Track successful login

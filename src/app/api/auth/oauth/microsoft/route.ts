@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { getProvider } from '@/lib/providers';
 import { storeTokens } from '@/lib/providers/token-manager';
 import { performInitialSync } from '@/lib/sync/email-sync';
@@ -87,8 +87,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Use service client to bypass RLS for email account creation
+    const serviceClient = await createServiceClient();
+
     // Check if account already exists
-    const { data: existingAccount } = await supabase
+    const { data: existingAccount } = await serviceClient
       .from('email_accounts')
       .select('id')
       .eq('user_id', user.id)
@@ -100,7 +103,7 @@ export async function GET(request: NextRequest) {
     if (existingAccount) {
       // Update existing account
       emailAccountId = existingAccount.id;
-      await supabase
+      await serviceClient
         .from('email_accounts')
         .update({
           sync_status: 'idle',
@@ -110,7 +113,7 @@ export async function GET(request: NextRequest) {
         .eq('id', emailAccountId);
     } else {
       // Create new email account
-      const { data: newAccount, error: createError } = await supabase
+      const { data: newAccount, error: createError } = await serviceClient
         .from('email_accounts')
         .insert({
           user_id: user.id,
@@ -126,19 +129,20 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (createError || !newAccount) {
-        throw new Error('Failed to create email account');
+        console.error('Database error creating email account:', createError);
+        throw new Error(`Failed to create email account: ${createError?.message || 'Unknown error'}`);
       }
 
       emailAccountId = newAccount.id;
 
       // Set as primary if it's the first account
-      const { data: accountCount } = await supabase
+      const { data: accountCount } = await serviceClient
         .from('email_accounts')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
       if ((accountCount?.length ?? 0) === 1) {
-        await supabase
+        await serviceClient
           .from('email_accounts')
           .update({ is_primary: true })
           .eq('id', emailAccountId);
@@ -181,21 +185,24 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('oauth_state');
     cookieStore.delete('oauth_code_verifier');
 
-    // Trigger initial sync immediately (don't wait for cron)
-    // Wrap in try/catch so OAuth succeeds even if sync fails
-    try {
-      await performInitialSync(emailAccountId);
-    } catch (syncError) {
-      console.error('Initial sync failed after OAuth (non-critical):', syncError);
-      // Continue to success page anyway - sync will retry via cron
-    }
+    // Trigger initial sync in background (don't wait for it to complete)
+    // User will be redirected immediately and can watch sync progress in real-time
+    console.warn('🔄 Triggering background sync for email account:', emailAccountId);
+    performInitialSync(emailAccountId)
+      .then((syncResult) => {
+        if (syncResult.success) {
+          console.warn('✅ Background sync completed successfully');
+        } else {
+          console.error('❌ Background sync failed:', syncResult.error);
+        }
+      })
+      .catch((syncError) => {
+        console.error('💥 Background sync threw error:', syncError);
+      });
 
-    // Redirect to success page
+    // Redirect to inbox immediately so user can see sync in real-time
     return NextResponse.redirect(
-      new URL(
-        `/app/settings?success=true&email=${encodeURIComponent(email)}`,
-        request.url
-      )
+      new URL(`/app/inbox`, request.url)
     );
   } catch (error: any) {
     console.error('OAuth callback error:', error);

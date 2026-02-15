@@ -8,6 +8,7 @@ import type { Message } from '@/types/message';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAccount } from '@/hooks/use-account';
 
 interface SmartInboxProps {
   userId: string;
@@ -29,12 +30,15 @@ interface MessageSection {
 }
 
 export function SmartInbox({ userId }: SmartInboxProps) {
+  const { selectedAccountId } = useAccount();
   const [sections, setSections] = useState<MessageSection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchInboxSections();
-  }, [userId]);
+    if (selectedAccountId) {
+      fetchInboxSections();
+    }
+  }, [userId, selectedAccountId]);
 
   // Helper function to group messages into threads
   function groupMessagesIntoThreads(messages: Message[]): MessageThread[] {
@@ -76,6 +80,8 @@ export function SmartInbox({ userId }: SmartInboxProps) {
   }
 
   async function fetchInboxSections() {
+    if (!selectedAccountId) return;
+
     const supabase = createClient();
 
     // 1. Priority messages (from priority_senders)
@@ -93,6 +99,7 @@ export function SmartInbox({ userId }: SmartInboxProps) {
         .from('messages')
         .select('*')
         .eq('user_id', userId)
+        .eq('email_account_id', selectedAccountId)
         .eq('folder_type', 'inbox')
         .in('from_email', priorityEmails)
         .order('message_date', { ascending: false })
@@ -106,6 +113,7 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       .from('messages')
       .select('*')
       .eq('user_id', userId)
+      .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
       .contains('categories', ['people'])
       .not('from_email', 'in', `(${priorityEmails.join(',')})`)
@@ -117,6 +125,7 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       .from('messages')
       .select('*')
       .eq('user_id', userId)
+      .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
       .contains('categories', ['newsletter'])
       .order('message_date', { ascending: false })
@@ -127,6 +136,7 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       .from('messages')
       .select('*')
       .eq('user_id', userId)
+      .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
       .contains('categories', ['notification'])
       .order('message_date', { ascending: false })
@@ -137,13 +147,25 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       .from('messages')
       .select('*')
       .eq('user_id', userId)
+      .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
       .contains('categories', ['promotion'])
       .order('message_date', { ascending: false })
       .limit(50);
 
+    // 6. Uncategorized messages (categories is empty array) - temporary fallback
+    const { data: uncategorizedMessages, error: uncategorizedError } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('email_account_id', selectedAccountId)
+      .eq('folder_type', 'inbox')
+      .eq('categories', []) // Empty array
+      .order('message_date', { ascending: false })
+      .limit(100);
+
     // Group each section's messages into threads
-    setSections([
+    const allSections = [
       {
         id: 'priority',
         title: 'Priority',
@@ -179,7 +201,20 @@ export function SmartInbox({ userId }: SmartInboxProps) {
         collapsed: true,
         count: promotionMessages?.length || 0,
       },
-    ]);
+    ];
+
+    // Add uncategorized section if there are any uncategorized messages
+    if (uncategorizedMessages && uncategorizedMessages.length > 0) {
+      allSections.push({
+        id: 'uncategorized',
+        title: 'Other',
+        threads: groupMessagesIntoThreads(uncategorizedMessages as Message[]),
+        collapsed: false,
+        count: uncategorizedMessages.length,
+      });
+    }
+
+    setSections(allSections);
 
     setLoading(false);
   }
@@ -194,7 +229,7 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     );
   }
 
-  if (loading) {
+  if (!selectedAccountId || loading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <p className="text-muted-foreground">Loading inbox...</p>

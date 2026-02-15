@@ -10,10 +10,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { X, Send, Save } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { X, Send, Save, Mail } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { toast } from 'sonner';
+import { useAccount } from '@/hooks/use-account';
 
 interface ComposerProps {
   onClose: () => void;
@@ -25,6 +33,7 @@ interface ComposerProps {
 }
 
 export interface EmailData {
+  email_account_id: string;
   to: string[];
   cc: string[];
   bcc: string[];
@@ -39,6 +48,8 @@ export function EmailComposer({
   defaultSubject = '',
   defaultBody = '',
 }: ComposerProps) {
+  const { selectedAccountId, accounts, loading: accountsLoading } = useAccount();
+  const [sendingAccountId, setSendingAccountId] = useState<string>('');
   const [to, setTo] = useState(defaultTo);
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
@@ -46,6 +57,13 @@ export function EmailComposer({
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
   const [sending, setSending] = useState(false);
+
+  // Initialize sending account to currently selected account
+  useEffect(() => {
+    if (selectedAccountId && !sendingAccountId) {
+      setSendingAccountId(selectedAccountId);
+    }
+  }, [selectedAccountId, sendingAccountId]);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -83,6 +101,11 @@ export function EmailComposer({
   const handleSend = async () => {
     if (!editor) return;
 
+    if (!sendingAccountId) {
+      toast.error('Please select an email account to send from');
+      return;
+    }
+
     const toEmails = to.split(',').map((e) => e.trim()).filter(Boolean);
     const ccEmails = cc.split(',').map((e) => e.trim()).filter(Boolean);
     const bccEmails = bcc.split(',').map((e) => e.trim()).filter(Boolean);
@@ -101,6 +124,7 @@ export function EmailComposer({
 
     try {
       const emailData: EmailData = {
+        email_account_id: sendingAccountId,
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
@@ -109,7 +133,23 @@ export function EmailComposer({
       };
 
       if (onSend) {
+        // Use custom onSend if provided
         await onSend(emailData);
+      } else {
+        // Default: call sendEmail server action
+        const { sendEmail } = await import('@/lib/actions/message');
+        const result = await sendEmail({
+          email_account_id: emailData.email_account_id,
+          to: emailData.to,
+          cc: emailData.cc,
+          bcc: emailData.bcc,
+          subject: emailData.subject,
+          body_html: emailData.body_html,
+        });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
       }
 
       toast.success('Email sent successfully');
@@ -132,6 +172,35 @@ export function EmailComposer({
 
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-4 p-4">
+          {/* Account Selector */}
+          <div className="flex items-center gap-2 rounded-md border border-muted bg-muted/30 p-3">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="account" className="min-w-[60px] text-sm font-medium">
+              From:
+            </Label>
+            <Select
+              value={sendingAccountId}
+              onValueChange={setSendingAccountId}
+              disabled={accountsLoading || accounts.length === 0}
+            >
+              <SelectTrigger id="account" className="flex-1 border-0 bg-transparent shadow-none focus:ring-0">
+                <SelectValue placeholder="Select account..." />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    <div className="flex items-center gap-2">
+                      <span>{account.email}</span>
+                      {account.is_primary && (
+                        <span className="text-xs text-muted-foreground">(Primary)</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* To Field */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">

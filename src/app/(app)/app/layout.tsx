@@ -9,6 +9,8 @@ import { AppNav } from '@/components/app/app-nav';
 import { SignOutButton } from '@/components/auth/signout-button';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { ShortcutsProvider } from '@/components/keyboard/shortcuts-provider';
+import { AppLayoutWrapper } from '@/components/app/app-layout-wrapper';
+import { AccountSwitcher } from '@/components/app/account-switcher';
 import { designTokens } from '@/lib/design-tokens';
 
 export default async function AppLayout({
@@ -34,28 +36,36 @@ export default async function AppLayout({
   }
 
   return (
-    <ShortcutsProvider>
-      <div className="flex min-h-screen">
-        {/* Main Sidebar */}
-        <aside className="w-64 border-r border-border bg-card p-6">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className={designTokens.typography.sectionHeading}>EaseMail</h1>
-              <p className="text-xs text-muted-foreground mt-1">{(profile as any)?.email}</p>
+    <AppLayoutWrapper>
+      <ShortcutsProvider>
+        <div className="flex min-h-screen">
+          {/* Main Sidebar */}
+          <aside className="w-64 border-r border-border bg-card p-6">
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className={designTokens.typography.sectionHeading}>EaseMail</h1>
+                <p className="text-xs text-muted-foreground mt-1">{(profile as any)?.email}</p>
+              </div>
+              <NotificationBell />
             </div>
-            <NotificationBell />
-          </div>
-          <AppNav />
 
-          {/* User Menu */}
-          <div className="mt-8 pt-8 border-t border-border">
-            <SignOutButton />
-          </div>
-        </aside>
+            {/* Account Switcher */}
+            <div className="mb-6">
+              <AccountSwitcher />
+            </div>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto">{children}</main>
-      </div>
-    </ShortcutsProvider>
+            <AppNav />
+
+            {/* User Menu */}
+            <div className="mt-8 pt-8 border-t border-border">
+              <SignOutButton />
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
+      </ShortcutsProvider>
+    </AppLayoutWrapper>
   );
 }
