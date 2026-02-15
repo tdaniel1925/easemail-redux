@@ -1,5 +1,5 @@
-// MessageActions component - reply, archive, trash, etc. (stubbed for Phase 1)
-// Phase 1, Task 13
+// MessageActions component - reply, archive, trash, etc.
+// Phase 2: Reply/Forward handlers implemented
 
 'use client';
 
@@ -9,32 +9,42 @@ import type { Message } from '@/types/message';
 
 interface MessageActionsProps {
   message: Message;
+  onReply?: () => void;
+  onReplyAll?: () => void;
+  onForward?: () => void;
 }
 
-export function MessageActions({ message }: MessageActionsProps) {
-  // Stubbed handlers - will be implemented in Phase 2
+export function MessageActions({ message, onReply, onReplyAll, onForward }: MessageActionsProps) {
+  // Phase 2: Reply/forward handlers
   const handleReply = () => {
-    console.log('Reply clicked - to be implemented in Phase 2');
+    if (onReply) {
+      onReply();
+    }
   };
 
   const handleReplyAll = () => {
-    console.log('Reply All clicked - to be implemented in Phase 2');
+    if (onReplyAll) {
+      onReplyAll();
+    }
   };
 
   const handleForward = () => {
-    console.log('Forward clicked - to be implemented in Phase 2');
+    if (onForward) {
+      onForward();
+    }
   };
 
+  // Future phase handlers
   const handleArchive = () => {
-    console.log('Archive clicked - to be implemented in Phase 2');
+    console.log('Archive clicked - to be implemented in future phase');
   };
 
   const handleTrash = () => {
-    console.log('Trash clicked - to be implemented in Phase 2');
+    console.log('Trash clicked - to be implemented in future phase');
   };
 
   const handleStar = () => {
-    console.log('Star clicked - to be implemented in Phase 2');
+    console.log('Star clicked - to be implemented in future phase');
   };
 
   return (
