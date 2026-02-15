@@ -22,6 +22,9 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { toast } from 'sonner';
 import { useAccount } from '@/hooks/use-account';
+import { SignatureSelector } from '@/components/email/signature-selector';
+import { useSignature } from '@/hooks/use-signature';
+import type { Signature } from '@/types/database';
 
 interface ComposerProps {
   onClose: () => void;
@@ -57,6 +60,13 @@ export function EmailComposer({
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
   const [sending, setSending] = useState(false);
+  const [selectedSignature, setSelectedSignature] = useState<Signature | null>(null);
+
+  // Load signatures for the selected account
+  const { defaultSignature } = useSignature({
+    accountId: sendingAccountId,
+    autoSelectDefault: true,
+  });
 
   // Initialize sending account to currently selected account
   useEffect(() => {
@@ -74,6 +84,34 @@ export function EmailComposer({
       },
     },
   });
+
+  // Auto-select default signature when account changes
+  useEffect(() => {
+    if (defaultSignature && !selectedSignature) {
+      setSelectedSignature(defaultSignature);
+    }
+  }, [defaultSignature, selectedSignature]);
+
+  // Insert signature into editor when signature changes
+  useEffect(() => {
+    if (editor && selectedSignature) {
+      // Get current content
+      const currentContent = editor.getHTML();
+
+      // Remove any existing signature (wrapped in a signature div)
+      const contentWithoutSignature = currentContent.replace(
+        /<div class="signature">[\s\S]*?<\/div>/g,
+        ''
+      );
+
+      // Add new signature at the end
+      const signatureHtml = `<div class="signature"><br/><br/>--<br/>${selectedSignature.content_html}</div>`;
+      const newContent = contentWithoutSignature + signatureHtml;
+
+      // Update editor content
+      editor.commands.setContent(newContent);
+    }
+  }, [selectedSignature, editor]);
 
   // Auto-save draft every 30 seconds
   useEffect(() => {
@@ -284,6 +322,17 @@ export function EmailComposer({
           {/* Editor */}
           <div className="rounded-md border">
             <EditorContent editor={editor} />
+          </div>
+
+          {/* Signature Selector */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground">Signature:</Label>
+            <SignatureSelector
+              accountId={sendingAccountId}
+              value={selectedSignature?.id || null}
+              onChange={setSelectedSignature}
+              allowNone={true}
+            />
           </div>
         </div>
       </div>

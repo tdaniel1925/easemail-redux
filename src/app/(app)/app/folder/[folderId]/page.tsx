@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { PageHeader } from '@/components/layout/page-header';
-import { FolderView } from '@/components/inbox/folder-view';
+import { FolderContent } from './folder-content';
 
 export default async function CustomFolderPage({
   params,
@@ -29,14 +28,10 @@ export default async function CustomFolderPage({
   const folderName = folder?.folder_name || 'Folder';
 
   return (
-    <div className="p-8">
-      <PageHeader
-        title={folderName}
-        description="Custom folder"
-      />
-      <div className="mt-6">
-        <FolderView userId={user.id} folderId={params.folderId} />
-      </div>
-    </div>
+    <FolderContent
+      userId={user.id}
+      folderId={params.folderId}
+      folderName={folderName}
+    />
   );
 }

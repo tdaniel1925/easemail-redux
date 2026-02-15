@@ -9,6 +9,8 @@ import { EmptyState } from '@/components/layout/empty-state';
 import { Inbox } from 'lucide-react';
 import { useAccount } from '@/hooks/use-account';
 import { createClient } from '@/lib/supabase/client';
+import { RealtimeIndicator } from '@/components/inbox/realtime-indicator';
+import { useRealtimeSync } from '@/hooks/use-realtime-sync';
 
 interface InboxContentProps {
   userId: string;
@@ -18,6 +20,15 @@ export function InboxContent({ userId }: InboxContentProps) {
   const { selectedAccountId } = useAccount();
   const [hasMessages, setHasMessages] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Set up real-time sync
+  useRealtimeSync((event) => {
+    console.log('[Inbox] Real-time event received:', event);
+    // Refresh inbox when new messages arrive
+    if (event.eventType === 'INSERT' || event.eventType === 'UPDATE') {
+      checkMessages();
+    }
+  });
 
   useEffect(() => {
     if (selectedAccountId) {
@@ -51,7 +62,10 @@ export function InboxContent({ userId }: InboxContentProps) {
           title="Inbox"
           description="Your incoming messages organized by priority"
         />
-        <RefreshButton userId={userId} />
+        <div className="flex items-center gap-4">
+          <RealtimeIndicator showText={true} />
+          <RefreshButton userId={userId} />
+        </div>
       </div>
 
       {loading ? (

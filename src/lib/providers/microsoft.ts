@@ -944,6 +944,127 @@ export class MicrosoftProvider implements EmailProvider {
     };
   }
 
+  /**
+   * Create a webhook subscription (Microsoft Graph)
+   * Registers a webhook endpoint to receive push notifications when mailbox changes
+   *
+   * @param accessToken - Valid Microsoft Graph access token
+   * @param notificationUrl - Public HTTPS URL to receive notifications
+   * @param clientState - Random string for validation (store this for verification)
+   * @returns Subscription details including ID and expiration
+   *
+   * Reference: https://docs.microsoft.com/en-us/graph/webhooks
+   */
+  async createSubscription(
+    accessToken: string,
+    notificationUrl: string,
+    clientState: string
+  ): Promise<{ subscriptionId: string; expiresAt: string }> {
+    // Microsoft Graph subscriptions expire after max 3 days for mail resources
+    const expirationDateTime = new Date();
+    expirationDateTime.setDate(expirationDateTime.getDate() + 2); // 2 days to be safe
+
+    const response = await fetch(`${GRAPH_BASE_URL}/subscriptions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        changeType: 'created,updated',
+        notificationUrl,
+        resource: 'me/mailFolders/inbox/messages',
+        expirationDateTime: expirationDateTime.toISOString(),
+        clientState,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to create Microsoft Graph subscription: ${error}`);
+    }
+
+    const data = await response.json();
+    return {
+      subscriptionId: data.id,
+      expiresAt: data.expirationDateTime,
+    };
+  }
+
+  /**
+   * Renew a webhook subscription (Microsoft Graph)
+   * Extends the expiration time of an existing subscription
+   *
+   * @param accessToken - Valid Microsoft Graph access token
+   * @param subscriptionId - ID of the existing subscription
+   * @returns Updated subscription details
+   *
+   * Note: Microsoft Graph subscriptions expire after 3 days max, so renew every 2 days
+   * Reference: https://docs.microsoft.com/en-us/graph/webhooks
+   */
+  async renewSubscription(
+    accessToken: string,
+    subscriptionId: string
+  ): Promise<{ subscriptionId: string; expiresAt: string }> {
+    // Extend expiration by 2 more days
+    const expirationDateTime = new Date();
+    expirationDateTime.setDate(expirationDateTime.getDate() + 2);
+
+    const response = await fetch(
+      `${GRAPH_BASE_URL}/subscriptions/${subscriptionId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          expirationDateTime: expirationDateTime.toISOString(),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to renew Microsoft Graph subscription: ${error}`);
+    }
+
+    const data = await response.json();
+    return {
+      subscriptionId: data.id,
+      expiresAt: data.expirationDateTime,
+    };
+  }
+
+  /**
+   * Delete a webhook subscription (Microsoft Graph)
+   * Cancels push notifications for this subscription
+   *
+   * @param accessToken - Valid Microsoft Graph access token
+   * @param subscriptionId - ID of the subscription to delete
+   *
+   * Reference: https://docs.microsoft.com/en-us/graph/webhooks
+   */
+  async deleteSubscription(
+    accessToken: string,
+    subscriptionId: string
+  ): Promise<void> {
+    const response = await fetch(
+      `${GRAPH_BASE_URL}/subscriptions/${subscriptionId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to delete Microsoft Graph subscription: ${error}`);
+    }
+  }
+
   private mapFolderType(folderId: string): FolderType {
     // This is a simplified mapping - in reality, you'd query folder metadata
     // For now, default to inbox

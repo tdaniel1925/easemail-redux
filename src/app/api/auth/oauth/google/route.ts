@@ -177,6 +177,36 @@ export async function GET(request: NextRequest) {
         });
     }
 
+    // Register webhook subscription for real-time updates
+    try {
+      // Google uses Cloud Pub/Sub topics for push notifications
+      // TODO: Replace with actual Pub/Sub topic name from environment
+      const pubsubTopic = process.env.GOOGLE_PUBSUB_TOPIC || 'projects/easemail/topics/gmail-push';
+      const subscriptionResult = await provider.createSubscription(
+        tokens.access_token,
+        pubsubTopic
+      );
+
+      if (subscriptionResult) {
+        // Store subscription details in database
+        // Note: webhook_subscription_id and webhook_expiry added in migration 010_realtime_sync.sql
+        // Google returns historyId and expiration (timestamp in ms)
+        const expiryDate = new Date(subscriptionResult.expiration).toISOString();
+        await supabase
+          .from('email_accounts')
+          .update({
+            webhook_subscription_id: subscriptionResult.historyId,
+            webhook_expiry: expiryDate,
+          } as any)
+          .eq('id', emailAccountId);
+
+        console.log('[Google OAuth] Webhook subscription created:', subscriptionResult.historyId);
+      }
+    } catch (webhookError) {
+      console.error('[Google OAuth] Failed to create webhook subscription (non-critical):', webhookError);
+      // Continue even if webhook registration fails - it can be retried later
+    }
+
     // Clear OAuth cookies
     cookieStore.delete('oauth_state');
     cookieStore.delete('oauth_code_verifier');

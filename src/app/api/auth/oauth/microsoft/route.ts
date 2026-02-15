@@ -181,6 +181,36 @@ export async function GET(request: NextRequest) {
         });
     }
 
+    // Register webhook subscription for real-time updates
+    try {
+      const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/microsoft`;
+      // Generate a unique client state for validation
+      const clientState = `${emailAccountId}-${Date.now()}`;
+
+      const subscriptionResult = await provider.createSubscription(
+        tokens.access_token,
+        webhookUrl,
+        clientState
+      );
+
+      if (subscriptionResult) {
+        // Store subscription details in database using service client
+        // Note: webhook_subscription_id and webhook_expiry added in migration 010_realtime_sync.sql
+        await serviceClient
+          .from('email_accounts')
+          .update({
+            webhook_subscription_id: subscriptionResult.subscriptionId,
+            webhook_expiry: subscriptionResult.expiresAt,
+          } as any)
+          .eq('id', emailAccountId);
+
+        console.log('[Microsoft OAuth] Webhook subscription created:', subscriptionResult.subscriptionId);
+      }
+    } catch (webhookError) {
+      console.error('[Microsoft OAuth] Failed to create webhook subscription (non-critical):', webhookError);
+      // Continue even if webhook registration fails - it can be retried later
+    }
+
     // Clear OAuth cookies
     cookieStore.delete('oauth_state');
     cookieStore.delete('oauth_code_verifier');

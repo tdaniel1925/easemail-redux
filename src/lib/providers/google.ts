@@ -1047,6 +1047,87 @@ export class GoogleProvider implements EmailProvider {
     return 'custom';
   }
 
+  /**
+   * Create a push notification subscription (Gmail watch)
+   * Registers a Cloud Pub/Sub topic to receive push notifications when mailbox changes
+   *
+   * @param accessToken - Valid Gmail access token
+   * @param topicName - Full Cloud Pub/Sub topic name (projects/{project}/topics/{topic})
+   * @returns Subscription details including historyId and expiration
+   *
+   * Reference: https://developers.google.com/gmail/api/guides/push
+   */
+  async createSubscription(
+    accessToken: string,
+    topicName: string
+  ): Promise<{ historyId: string; expiration: number }> {
+    const response = await fetch(`${GMAIL_BASE_URL}/users/me/watch`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        topicName,
+        labelIds: ['INBOX', 'SENT', 'DRAFT', 'TRASH'],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to create Gmail watch subscription: ${error}`);
+    }
+
+    const data = await response.json();
+    return {
+      historyId: data.historyId,
+      expiration: data.expiration,
+    };
+  }
+
+  /**
+   * Renew a push notification subscription (Gmail watch)
+   * Extends the expiration time of an existing subscription
+   *
+   * @param accessToken - Valid Gmail access token
+   * @param topicName - Full Cloud Pub/Sub topic name (projects/{project}/topics/{topic})
+   * @returns Updated subscription details
+   *
+   * Note: Gmail watch subscriptions expire after 7 days, so renew every 6 days
+   * Reference: https://developers.google.com/gmail/api/guides/push
+   */
+  async renewSubscription(
+    accessToken: string,
+    topicName: string
+  ): Promise<{ historyId: string; expiration: number }> {
+    // Gmail doesn't have a separate renew endpoint - just call watch again
+    // This replaces the existing subscription with a new one
+    return this.createSubscription(accessToken, topicName);
+  }
+
+  /**
+   * Stop a push notification subscription (Gmail watch)
+   * Cancels push notifications for this mailbox
+   *
+   * @param accessToken - Valid Gmail access token
+   *
+   * Reference: https://developers.google.com/gmail/api/guides/push
+   */
+  async deleteSubscription(accessToken: string): Promise<void> {
+    const response = await fetch(`${GMAIL_BASE_URL}/users/me/stop`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to stop Gmail watch subscription: ${error}`);
+    }
+  }
+
   private createRFC2822Message(message: SendMessageParams): string {
     const to = message.to.map((r) => `${r.name || r.email} <${r.email}>`).join(', ');
     const cc = message.cc?.map((r) => `${r.name || r.email} <${r.email}>`).join(', ');

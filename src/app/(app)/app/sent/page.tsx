@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { PageHeader } from '@/components/layout/page-header';
-import { FolderView } from '@/components/inbox/folder-view';
+import { SentContent } from './sent-content';
 
 export default async function SentPage() {
   const supabase = await createClient();
@@ -14,15 +13,5 @@ export default async function SentPage() {
     redirect('/auth/signin');
   }
 
-  return (
-    <div className="p-8">
-      <PageHeader
-        title="Sent"
-        description="Sent messages"
-      />
-      <div className="mt-6">
-        <FolderView userId={user.id} folderType="sent" />
-      </div>
-    </div>
-  );
+  return <SentContent userId={user.id} />;
 }

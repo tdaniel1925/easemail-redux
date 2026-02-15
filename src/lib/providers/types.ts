@@ -306,4 +306,17 @@ export interface EmailProvider {
     token: string,
     details: MeetingDetails
   ): Promise<TeamsMeeting>;
+
+  // Webhooks / Push Notifications
+  // Note: Parameters and return types differ between providers
+  // Google uses Pub/Sub topics, Microsoft uses webhook URLs with client state
+  createSubscription(
+    token: string,
+    webhookUrlOrTopic: string,
+    clientState?: string
+  ): Promise<any>;
+  renewSubscription(
+    token: string,
+    subscriptionIdOrTopic: string
+  ): Promise<any>;
 }
