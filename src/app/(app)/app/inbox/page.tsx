@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
 import { SmartInbox } from '@/components/inbox/smart-inbox';
+import { RefreshButton } from '@/components/inbox/refresh-button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/layout/empty-state';
 import { Inbox } from 'lucide-react';
@@ -33,10 +34,13 @@ export default async function InboxPage() {
 
   return (
     <div className="p-8">
-      <PageHeader
-        title="Inbox"
-        description="Your incoming messages organized by priority"
-      />
+      <div className="flex items-center justify-between mb-6">
+        <PageHeader
+          title="Inbox"
+          description="Your incoming messages organized by priority"
+        />
+        <RefreshButton userId={user.id} />
+      </div>
 
       {hasMessages ? (
         <SmartInbox userId={user.id} />

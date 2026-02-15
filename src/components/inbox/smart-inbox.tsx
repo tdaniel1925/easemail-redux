@@ -7,15 +7,23 @@ import { createClient } from '@/lib/supabase/client';
 import type { Message } from '@/types/message';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface SmartInboxProps {
   userId: string;
 }
 
+interface MessageThread {
+  id: string; // thread_id or message_id for standalone
+  messages: Message[];
+  latestMessage: Message;
+  count: number;
+}
+
 interface MessageSection {
   id: string;
   title: string;
-  messages: Message[];
+  threads: MessageThread[];
   collapsed: boolean;
   count: number;
 }
@@ -27,6 +35,45 @@ export function SmartInbox({ userId }: SmartInboxProps) {
   useEffect(() => {
     fetchInboxSections();
   }, [userId]);
+
+  // Helper function to group messages into threads
+  function groupMessagesIntoThreads(messages: Message[]): MessageThread[] {
+    const threadMap = new Map<string, Message[]>();
+
+    // Group messages by provider_thread_id
+    for (const message of messages) {
+      const threadId = message.provider_thread_id || `standalone_${message.id}`;
+
+      if (!threadMap.has(threadId)) {
+        threadMap.set(threadId, []);
+      }
+      threadMap.get(threadId)!.push(message);
+    }
+
+    // Convert to MessageThread array
+    const threads: MessageThread[] = [];
+    for (const [threadId, threadMessages] of threadMap) {
+      // Sort messages in thread by date (latest first)
+      threadMessages.sort((a, b) =>
+        new Date(b.message_date).getTime() - new Date(a.message_date).getTime()
+      );
+
+      threads.push({
+        id: threadId,
+        messages: threadMessages,
+        latestMessage: threadMessages[0],
+        count: threadMessages.length,
+      });
+    }
+
+    // Sort threads by latest message date
+    threads.sort((a, b) =>
+      new Date(b.latestMessage.message_date).getTime() -
+      new Date(a.latestMessage.message_date).getTime()
+    );
+
+    return threads;
+  }
 
   async function fetchInboxSections() {
     const supabase = createClient();
@@ -95,39 +142,40 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       .order('message_date', { ascending: false })
       .limit(50);
 
+    // Group each section's messages into threads
     setSections([
       {
         id: 'priority',
         title: 'Priority',
-        messages: priorityMessages,
+        threads: groupMessagesIntoThreads(priorityMessages),
         collapsed: false,
         count: priorityMessages.length,
       },
       {
         id: 'people',
         title: 'People',
-        messages: (peopleMessages as Message[]) || [],
+        threads: groupMessagesIntoThreads((peopleMessages as Message[]) || []),
         collapsed: false,
         count: peopleMessages?.length || 0,
       },
       {
         id: 'newsletters',
         title: 'Newsletters',
-        messages: (newsletterMessages as Message[]) || [],
+        threads: groupMessagesIntoThreads((newsletterMessages as Message[]) || []),
         collapsed: true,
         count: newsletterMessages?.length || 0,
       },
       {
         id: 'notifications',
         title: 'Notifications',
-        messages: (notificationMessages as Message[]) || [],
+        threads: groupMessagesIntoThreads((notificationMessages as Message[]) || []),
         collapsed: true,
         count: notificationMessages?.length || 0,
       },
       {
         id: 'promotions',
         title: 'Promotions',
-        messages: (promotionMessages as Message[]) || [],
+        threads: groupMessagesIntoThreads((promotionMessages as Message[]) || []),
         collapsed: true,
         count: promotionMessages?.length || 0,
       },
@@ -178,15 +226,24 @@ export function SmartInbox({ userId }: SmartInboxProps) {
               <span className="text-xs">({section.count})</span>
             </button>
 
-            {/* Messages */}
+            {/* Threads */}
             {!section.collapsed && (
               <div className="flex flex-col gap-0.5">
-                {section.messages.map((message) => (
-                  <MessageRow
-                    key={message.id}
-                    message={message}
-                    isPriority={section.id === 'priority'}
-                  />
+                {section.threads.map((thread) => (
+                  <div key={thread.id} className="relative">
+                    <MessageRow
+                      message={thread.latestMessage}
+                      isPriority={section.id === 'priority'}
+                    />
+                    {thread.count > 1 && (
+                      <Badge
+                        variant="secondary"
+                        className="absolute right-16 top-3 text-xs"
+                      >
+                        {thread.count}
+                      </Badge>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

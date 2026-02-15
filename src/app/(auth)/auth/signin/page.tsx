@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import { SignInForm } from '@/components/auth/signin-form';
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <SignInForm />
+        <Suspense fallback={<div className="text-center text-sm text-muted-foreground">Loading...</div>}>
+          <SignInForm />
+        </Suspense>
       </div>
     </div>
   );

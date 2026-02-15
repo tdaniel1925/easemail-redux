@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { performDeltaSync, performInitialSync } from '@/lib/sync/email-sync';
+import { performDeltaSync, performInitialSync, performFolderSync } from '@/lib/sync/email-sync';
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
         } else {
           // Perform delta sync for existing accounts
           result = await performDeltaSync(account.id);
+
+          // Also sync folders to detect new/renamed/deleted folders
+          await performFolderSync(account.id);
         }
 
         if (result.success) {

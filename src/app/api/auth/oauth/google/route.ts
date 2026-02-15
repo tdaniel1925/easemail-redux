@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { getProvider } from '@/lib/providers';
 import { storeTokens } from '@/lib/providers/token-manager';
+import { performInitialSync } from '@/lib/sync/email-sync';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -180,14 +181,14 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('oauth_state');
     cookieStore.delete('oauth_code_verifier');
 
-    // Trigger initial sync by setting status to 'syncing'
-    await supabase
-      .from('email_accounts')
-      .update({
-        sync_status: 'syncing',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', emailAccountId);
+    // Trigger initial sync immediately (don't wait for cron)
+    // Wrap in try/catch so OAuth succeeds even if sync fails
+    try {
+      await performInitialSync(emailAccountId);
+    } catch (syncError) {
+      console.error('Initial sync failed after OAuth (non-critical):', syncError);
+      // Continue to success page anyway - sync will retry via cron
+    }
 
     // Redirect to success page
     return NextResponse.redirect(
