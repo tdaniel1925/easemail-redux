@@ -1,0 +1,2220 @@
+// EaseMail v2 — Database Types
+// Generated from Supabase schema
+// DO NOT EDIT MANUALLY
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+export type PlanType = 'FREE' | 'PRO' | 'BUSINESS' | 'ENTERPRISE';
+export type UserRole = 'SUPER_ADMIN' | 'ORG_OWNER' | 'ORG_MEMBER' | 'INDIVIDUAL';
+export type ProviderType = 'GOOGLE' | 'MICROSOFT';
+export type FolderType = 'inbox' | 'sent' | 'drafts' | 'trash' | 'spam' | 'archive' | 'starred' | 'important' | 'snoozed' | 'custom';
+export type SyncStatus = 'idle' | 'syncing' | 'error' | 'paused';
+export type EmailStatus = 'draft' | 'queued' | 'sending' | 'sent' | 'failed' | 'bounced';
+export type InviteStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
+export type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'trialing' | 'paused';
+export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+export type EventRsvp = 'accepted' | 'declined' | 'tentative' | 'none';
+export type NotificationType = 'info' | 'warning' | 'error' | 'success';
+export type AuditAction = 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout' | 'impersonate' | 'export' | 'bulk_action';
+
+// ============================================================================
+// JSON TYPES
+// ============================================================================
+
+export interface EmailRecipient {
+  email: string;
+  name?: string;
+}
+
+export interface EmailAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  content_id?: string;
+}
+
+export interface NotificationSchedule {
+  morning: { enabled: boolean; time: string };
+  afternoon: { enabled: boolean; time: string };
+  evening: { enabled: boolean; time: string };
+}
+
+export interface SwipeActions {
+  left: string;
+  right: string;
+}
+
+export interface EmailRuleCondition {
+  field: string;
+  operator: string;
+  value: string;
+}
+
+export interface EmailRuleAction {
+  type: string;
+  params: Record<string, unknown>;
+}
+
+export interface CalendarAttendee {
+  email: string;
+  name?: string;
+  status?: string;
+}
+
+export interface CalendarReminder {
+  minutes_before: number;
+  method: string;
+}
+
+// ============================================================================
+// DATABASE SCHEMA
+// ============================================================================
+
+export interface Database {
+  public: {
+    Tables: {
+      api_keys: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          key_hash: string
+          key_prefix: string
+          scopes: string[]
+          last_used_at: string | null
+          expires_at: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          key_hash: string
+          key_prefix: string
+          scopes?: string[]
+          last_used_at?: string | null
+          expires_at?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          key_hash?: string
+          key_prefix?: string
+          scopes?: string[]
+          last_used_at?: string | null
+          expires_at?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          target_user_id: string | null
+          organization_id: string | null
+          action: AuditAction
+          entity_type: string
+          entity_id: string | null
+          details: Json
+          ip_address: string | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          target_user_id?: string | null
+          organization_id?: string | null
+          action: AuditAction
+          entity_type: string
+          entity_id?: string | null
+          details?: Json
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          target_user_id?: string | null
+          organization_id?: string | null
+          action?: AuditAction
+          entity_type?: string
+          entity_id?: string | null
+          details?: Json
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+      }
+      backup_codes: {
+        Row: {
+          id: string
+          user_id: string
+          code_hash: string
+          used: boolean
+          used_at: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          code_hash: string
+          used?: boolean
+          used_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          code_hash?: string
+          used?: boolean
+          used_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      calendar_events: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string
+          provider_event_id: string
+          provider_calendar_id: string | null
+          title: string
+          description: string | null
+          location: string | null
+          start_time: string
+          end_time: string
+          all_day: boolean
+          timezone: string
+          recurrence: Json | null
+          attendees: Json
+          organizer_email: string | null
+          rsvp_status: EventRsvp
+          is_online_meeting: boolean
+          meeting_url: string | null
+          meeting_provider: string | null
+          reminders: Json
+          color: string | null
+          status: string
+          synced_at: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id: string
+          provider_event_id: string
+          provider_calendar_id?: string | null
+          title: string
+          description?: string | null
+          location?: string | null
+          start_time: string
+          end_time: string
+          all_day?: boolean
+          timezone?: string
+          recurrence?: Json | null
+          attendees?: Json
+          organizer_email?: string | null
+          rsvp_status?: EventRsvp
+          is_online_meeting?: boolean
+          meeting_url?: string | null
+          meeting_provider?: string | null
+          reminders?: Json
+          color?: string | null
+          status?: string
+          synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string
+          provider_event_id?: string
+          provider_calendar_id?: string | null
+          title?: string
+          description?: string | null
+          location?: string | null
+          start_time?: string
+          end_time?: string
+          all_day?: boolean
+          timezone?: string
+          recurrence?: Json | null
+          attendees?: Json
+          organizer_email?: string | null
+          rsvp_status?: EventRsvp
+          is_online_meeting?: boolean
+          meeting_url?: string | null
+          meeting_provider?: string | null
+          reminders?: Json
+          color?: string | null
+          status?: string
+          synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      calendar_metadata: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string
+          provider_calendar_id: string
+          calendar_name: string
+          description: string | null
+          timezone: string
+          is_primary: boolean
+          read_only: boolean
+          is_active: boolean
+          color: string | null
+          sync_cursor: string | null
+          last_synced_at: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id: string
+          provider_calendar_id: string
+          calendar_name: string
+          description?: string | null
+          timezone?: string
+          is_primary?: boolean
+          read_only?: boolean
+          is_active?: boolean
+          color?: string | null
+          sync_cursor?: string | null
+          last_synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string
+          provider_calendar_id?: string
+          calendar_name?: string
+          description?: string | null
+          timezone?: string
+          is_primary?: boolean
+          read_only?: boolean
+          is_active?: boolean
+          color?: string | null
+          sync_cursor?: string | null
+          last_synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      contacts: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          name: string | null
+          phone: string | null
+          company: string | null
+          job_title: string | null
+          avatar_url: string | null
+          notes: string | null
+          is_favorite: boolean
+          is_priority_sender: boolean
+          email_count: number
+          last_emailed_at: string | null
+          source: string
+          metadata: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          name?: string | null
+          phone?: string | null
+          company?: string | null
+          job_title?: string | null
+          avatar_url?: string | null
+          notes?: string | null
+          is_favorite?: boolean
+          is_priority_sender?: boolean
+          email_count?: number
+          last_emailed_at?: string | null
+          source?: string
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          name?: string | null
+          phone?: string | null
+          company?: string | null
+          job_title?: string | null
+          avatar_url?: string | null
+          notes?: string | null
+          is_favorite?: boolean
+          is_priority_sender?: boolean
+          email_count?: number
+          last_emailed_at?: string | null
+          source?: string
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      custom_labels: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          color: string
+          sort_order: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          color?: string
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          color?: string
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      drafts: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string | null
+          to_recipients: Json
+          cc_recipients: Json
+          bcc_recipients: Json
+          subject: string | null
+          body_html: string | null
+          body_text: string | null
+          reply_to_message_id: string | null
+          forward_from_id: string | null
+          attachments: Json
+          auto_saved: boolean
+          provider_draft_id: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id?: string | null
+          to_recipients?: Json
+          cc_recipients?: Json
+          bcc_recipients?: Json
+          subject?: string | null
+          body_html?: string | null
+          body_text?: string | null
+          reply_to_message_id?: string | null
+          forward_from_id?: string | null
+          attachments?: Json
+          auto_saved?: boolean
+          provider_draft_id?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string | null
+          to_recipients?: Json
+          cc_recipients?: Json
+          bcc_recipients?: Json
+          subject?: string | null
+          body_html?: string | null
+          body_text?: string | null
+          reply_to_message_id?: string | null
+          forward_from_id?: string | null
+          attachments?: Json
+          auto_saved?: boolean
+          provider_draft_id?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      email_accounts: {
+        Row: {
+          id: string
+          user_id: string
+          provider: ProviderType
+          email: string
+          name: string | null
+          is_primary: boolean
+          sync_status: SyncStatus
+          sync_cursor: string | null
+          last_synced_at: string | null
+          error_message: string | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: ProviderType
+          email: string
+          name?: string | null
+          is_primary?: boolean
+          sync_status?: SyncStatus
+          sync_cursor?: string | null
+          last_synced_at?: string | null
+          error_message?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          provider?: ProviderType
+          email?: string
+          name?: string | null
+          is_primary?: boolean
+          sync_status?: SyncStatus
+          sync_cursor?: string | null
+          last_synced_at?: string | null
+          error_message?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      email_rules: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          is_active: boolean
+          priority: number
+          conditions: Json
+          actions: Json
+          match_mode: string
+          applied_count: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          is_active?: boolean
+          priority?: number
+          conditions: Json
+          actions: Json
+          match_mode?: string
+          applied_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          is_active?: boolean
+          priority?: number
+          conditions?: Json
+          actions?: Json
+          match_mode?: string
+          applied_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      email_templates: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          subject: string | null
+          body_html: string
+          body_text: string | null
+          category: string | null
+          variables: string[]
+          use_count: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          subject?: string | null
+          body_html: string
+          body_text?: string | null
+          category?: string | null
+          variables?: string[]
+          use_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          subject?: string | null
+          body_html?: string
+          body_text?: string | null
+          category?: string | null
+          variables?: string[]
+          use_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      enterprise_leads: {
+        Row: {
+          id: string
+          company_name: string
+          contact_name: string
+          contact_email: string
+          phone: string | null
+          message: string | null
+          seats_needed: number | null
+          status: string
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_name: string
+          contact_name: string
+          contact_email: string
+          phone?: string | null
+          message?: string | null
+          seats_needed?: number | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_name?: string
+          contact_name?: string
+          contact_email?: string
+          phone?: string | null
+          message?: string | null
+          seats_needed?: number | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      events: {
+        Row: {
+          id: string
+          event_type: string
+          actor_id: string | null
+          entity_type: string | null
+          entity_id: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          actor_id?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_type?: string
+          actor_id?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+      }
+      folder_mappings: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string
+          provider_folder_id: string
+          folder_name: string
+          folder_type: FolderType
+          is_system_folder: boolean
+          unread_count: number
+          total_count: number
+          is_active: boolean
+          last_synced_at: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id: string
+          provider_folder_id: string
+          folder_name: string
+          folder_type: FolderType
+          is_system_folder?: boolean
+          unread_count?: number
+          total_count?: number
+          is_active?: boolean
+          last_synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string
+          provider_folder_id?: string
+          folder_name?: string
+          folder_type?: FolderType
+          is_system_folder?: boolean
+          unread_count?: number
+          total_count?: number
+          is_active?: boolean
+          last_synced_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      impersonate_sessions: {
+        Row: {
+          id: string
+          admin_user_id: string
+          target_user_id: string
+          reason: string
+          started_at: string
+          ended_at: string | null
+          ip_address: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          admin_user_id: string
+          target_user_id: string
+          reason: string
+          started_at?: string
+          ended_at?: string | null
+          ip_address?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          admin_user_id?: string
+          target_user_id?: string
+          reason?: string
+          started_at?: string
+          ended_at?: string | null
+          ip_address?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      invoices: {
+        Row: {
+          id: string
+          subscription_id: string | null
+          stripe_invoice_id: string | null
+          amount_cents: number
+          currency: string
+          status: InvoiceStatus
+          description: string | null
+          period_start: string | null
+          period_end: string | null
+          paid_at: string | null
+          pdf_url: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          subscription_id?: string | null
+          stripe_invoice_id?: string | null
+          amount_cents: number
+          currency?: string
+          status?: InvoiceStatus
+          description?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          paid_at?: string | null
+          pdf_url?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          subscription_id?: string | null
+          stripe_invoice_id?: string | null
+          amount_cents?: number
+          currency?: string
+          status?: InvoiceStatus
+          description?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          paid_at?: string | null
+          pdf_url?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      message_labels: {
+        Row: {
+          id: string
+          message_id: string
+          label_id: string
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          label_id: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          label_id?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string
+          provider_message_id: string
+          provider_thread_id: string | null
+          subject: string | null
+          from_email: string
+          from_name: string | null
+          to_recipients: Json
+          cc_recipients: Json
+          bcc_recipients: Json
+          reply_to: Json
+          body_html: string | null
+          body_text: string | null
+          snippet: string | null
+          folder_type: FolderType
+          folder_id: string | null
+          is_unread: boolean
+          is_starred: boolean
+          is_draft: boolean
+          has_attachments: boolean
+          attachments: Json
+          importance: string
+          categories: string[]
+          message_date: string
+          synced_at: string
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id: string
+          provider_message_id: string
+          provider_thread_id?: string | null
+          subject?: string | null
+          from_email: string
+          from_name?: string | null
+          to_recipients?: Json
+          cc_recipients?: Json
+          bcc_recipients?: Json
+          reply_to?: Json
+          body_html?: string | null
+          body_text?: string | null
+          snippet?: string | null
+          folder_type?: FolderType
+          folder_id?: string | null
+          is_unread?: boolean
+          is_starred?: boolean
+          is_draft?: boolean
+          has_attachments?: boolean
+          attachments?: Json
+          importance?: string
+          categories?: string[]
+          message_date: string
+          synced_at?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string
+          provider_message_id?: string
+          provider_thread_id?: string | null
+          subject?: string | null
+          from_email?: string
+          from_name?: string | null
+          to_recipients?: Json
+          cc_recipients?: Json
+          bcc_recipients?: Json
+          reply_to?: Json
+          body_html?: string | null
+          body_text?: string | null
+          snippet?: string | null
+          folder_type?: FolderType
+          folder_id?: string | null
+          is_unread?: boolean
+          is_starred?: boolean
+          is_draft?: boolean
+          has_attachments?: boolean
+          attachments?: Json
+          importance?: string
+          categories?: string[]
+          message_date?: string
+          synced_at?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      notification_queue: {
+        Row: {
+          id: string
+          user_id: string
+          type: NotificationType
+          title: string
+          message: string
+          link: string | null
+          read: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: NotificationType
+          title: string
+          message: string
+          link?: string | null
+          read?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: NotificationType
+          title?: string
+          message?: string
+          link?: string | null
+          read?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      oauth_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string
+          provider: ProviderType
+          access_token: string
+          refresh_token: string
+          token_expires_at: string
+          scopes: string[]
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id: string
+          provider: ProviderType
+          access_token: string
+          refresh_token: string
+          token_expires_at: string
+          scopes?: string[]
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string
+          provider?: ProviderType
+          access_token?: string
+          refresh_token?: string
+          token_expires_at?: string
+          scopes?: string[]
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      organization_invites: {
+        Row: {
+          id: string
+          organization_id: string
+          email: string
+          role: string
+          invited_by: string
+          token: string
+          status: InviteStatus
+          expires_at: string
+          accepted_at: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          email: string
+          role?: string
+          invited_by: string
+          token: string
+          status?: InviteStatus
+          expires_at: string
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          email?: string
+          role?: string
+          invited_by?: string
+          token?: string
+          status?: InviteStatus
+          expires_at?: string
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      organization_members: {
+        Row: {
+          id: string
+          organization_id: string
+          user_id: string
+          role: string
+          is_admin: boolean
+          joined_at: string
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          user_id: string
+          role?: string
+          is_admin?: boolean
+          joined_at?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          user_id?: string
+          role?: string
+          is_admin?: boolean
+          joined_at?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          domain: string | null
+          logo_url: string | null
+          plan: PlanType
+          seats: number
+          seats_used: number
+          billing_email: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: SubscriptionStatus
+          trial_ends_at: string | null
+          settings: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          domain?: string | null
+          logo_url?: string | null
+          plan?: PlanType
+          seats?: number
+          seats_used?: number
+          billing_email: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: SubscriptionStatus
+          trial_ends_at?: string | null
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          domain?: string | null
+          logo_url?: string | null
+          plan?: PlanType
+          seats?: number
+          seats_used?: number
+          billing_email?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: SubscriptionStatus
+          trial_ends_at?: string | null
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      payment_methods: {
+        Row: {
+          id: string
+          user_id: string | null
+          organization_id: string | null
+          stripe_payment_method_id: string
+          card_brand: string | null
+          card_last4: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          is_default: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          organization_id?: string | null
+          stripe_payment_method_id: string
+          card_brand?: string | null
+          card_last4?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          organization_id?: string | null
+          stripe_payment_method_id?: string
+          card_brand?: string | null
+          card_last4?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      priority_senders: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          name: string | null
+          is_blocked: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          name?: string | null
+          is_blocked?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          name?: string | null
+          is_blocked?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      rate_limits: {
+        Row: {
+          key: string
+          count: number
+          window_start: string
+        }
+        Insert: {
+          key: string
+          count?: number
+          window_start?: string
+        }
+        Update: {
+          key?: string
+          count?: number
+          window_start?: string
+        }
+      }
+      scheduled_emails: {
+        Row: {
+          id: string
+          user_id: string
+          email_account_id: string
+          to_recipients: Json
+          cc_recipients: Json
+          bcc_recipients: Json
+          subject: string | null
+          body_html: string
+          attachments: Json
+          scheduled_for: string
+          status: EmailStatus
+          sent_at: string | null
+          error_message: string | null
+          retry_count: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_account_id: string
+          to_recipients: Json
+          cc_recipients?: Json
+          bcc_recipients?: Json
+          subject?: string | null
+          body_html: string
+          attachments?: Json
+          scheduled_for: string
+          status?: EmailStatus
+          sent_at?: string | null
+          error_message?: string | null
+          retry_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_account_id?: string
+          to_recipients?: Json
+          cc_recipients?: Json
+          bcc_recipients?: Json
+          subject?: string | null
+          body_html?: string
+          attachments?: Json
+          scheduled_for?: string
+          status?: EmailStatus
+          sent_at?: string | null
+          error_message?: string | null
+          retry_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      sender_groups: {
+        Row: {
+          id: string
+          user_id: string
+          sender_email: string
+          group_name: string | null
+          is_grouped: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          sender_email: string
+          group_name?: string | null
+          is_grouped?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sender_email?: string
+          group_name?: string | null
+          is_grouped?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      signatures: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          content_html: string
+          content_text: string | null
+          is_default: boolean
+          email_account_id: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          content_html: string
+          content_text?: string | null
+          is_default?: boolean
+          email_account_id?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          content_html?: string
+          content_text?: string | null
+          is_default?: boolean
+          email_account_id?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      sms_messages: {
+        Row: {
+          id: string
+          user_id: string
+          direction: 'inbound' | 'outbound'
+          from_number: string
+          to_number: string
+          body: string
+          twilio_sid: string | null
+          status: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          direction: 'inbound' | 'outbound'
+          from_number: string
+          to_number: string
+          body: string
+          twilio_sid?: string | null
+          status?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          direction?: 'inbound' | 'outbound'
+          from_number?: string
+          to_number?: string
+          body?: string
+          twilio_sid?: string | null
+          status?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      snoozed_emails: {
+        Row: {
+          id: string
+          user_id: string
+          message_id: string
+          snooze_until: string
+          original_folder_type: FolderType
+          unsnoozed: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          message_id: string
+          snooze_until: string
+          original_folder_type: FolderType
+          unsnoozed?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          message_id?: string
+          snooze_until?: string
+          original_folder_type?: FolderType
+          unsnoozed?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      spam_reports: {
+        Row: {
+          id: string
+          user_id: string
+          message_id: string | null
+          reported_email: string
+          reason: string | null
+          auto_detected: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          message_id?: string | null
+          reported_email: string
+          reason?: string | null
+          auto_detected?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          message_id?: string | null
+          reported_email?: string
+          reason?: string | null
+          auto_detected?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          organization_id: string | null
+          user_id: string | null
+          stripe_subscription_id: string
+          stripe_customer_id: string
+          plan: PlanType
+          status: SubscriptionStatus
+          seats: number
+          current_period_start: string | null
+          current_period_end: string | null
+          cancel_at: string | null
+          canceled_at: string | null
+          trial_end: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id?: string | null
+          user_id?: string | null
+          stripe_subscription_id: string
+          stripe_customer_id: string
+          plan: PlanType
+          status?: SubscriptionStatus
+          seats?: number
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at?: string | null
+          canceled_at?: string | null
+          trial_end?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string | null
+          user_id?: string | null
+          stripe_subscription_id?: string
+          stripe_customer_id?: string
+          plan?: PlanType
+          status?: SubscriptionStatus
+          seats?: number
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at?: string | null
+          canceled_at?: string | null
+          trial_end?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      sync_checkpoints: {
+        Row: {
+          id: string
+          email_account_id: string
+          sync_type: string
+          cursor: string | null
+          last_successful_at: string | null
+          error_count: number
+          last_error: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          email_account_id: string
+          sync_type: string
+          cursor?: string | null
+          last_successful_at?: string | null
+          error_count?: number
+          last_error?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          email_account_id?: string
+          sync_type?: string
+          cursor?: string | null
+          last_successful_at?: string | null
+          error_count?: number
+          last_error?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      system_settings: {
+        Row: {
+          id: string
+          key: string
+          value: Json
+          description: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: Json
+          description?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: Json
+          description?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      usage_tracking: {
+        Row: {
+          id: string
+          user_id: string
+          organization_id: string | null
+          feature: string
+          count: number
+          metadata: Json | null
+          timestamp: string
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          organization_id?: string | null
+          feature: string
+          count?: number
+          metadata?: Json | null
+          timestamp?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          organization_id?: string | null
+          feature?: string
+          count?: number
+          metadata?: Json | null
+          timestamp?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      user_login_tracking: {
+        Row: {
+          id: string
+          user_id: string
+          ip_address: string | null
+          user_agent: string | null
+          login_at: string
+          success: boolean
+          failure_reason: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          ip_address?: string | null
+          user_agent?: string | null
+          login_at?: string
+          success?: boolean
+          failure_reason?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          login_at?: string
+          success?: boolean
+          failure_reason?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      user_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          theme: string
+          inbox_layout: string
+          sidebar_mode: string
+          compose_font: string
+          compose_font_size: number
+          notifications_enabled: boolean
+          notification_sound: boolean
+          notification_schedule: Json
+          ai_features_enabled: boolean
+          auto_categorize: boolean
+          reading_pane_position: string
+          conversations_enabled: boolean
+          keyboard_shortcuts: boolean
+          swipe_actions: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme?: string
+          inbox_layout?: string
+          sidebar_mode?: string
+          compose_font?: string
+          compose_font_size?: number
+          notifications_enabled?: boolean
+          notification_sound?: boolean
+          notification_schedule?: Json
+          ai_features_enabled?: boolean
+          auto_categorize?: boolean
+          reading_pane_position?: string
+          conversations_enabled?: boolean
+          keyboard_shortcuts?: boolean
+          swipe_actions?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme?: string
+          inbox_layout?: string
+          sidebar_mode?: string
+          compose_font?: string
+          compose_font_size?: number
+          notifications_enabled?: boolean
+          notification_sound?: boolean
+          notification_schedule?: Json
+          ai_features_enabled?: boolean
+          auto_categorize?: boolean
+          reading_pane_position?: string
+          conversations_enabled?: boolean
+          keyboard_shortcuts?: boolean
+          swipe_actions?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      users: {
+        Row: {
+          id: string
+          email: string
+          name: string | null
+          nickname: string | null
+          avatar_url: string | null
+          role: UserRole
+          is_super_admin: boolean
+          onboarding_completed: boolean
+          onboarding_step: number
+          timezone: string
+          locale: string
+          two_factor_enabled: boolean
+          two_factor_secret: string | null
+          last_login_at: string | null
+          login_count: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id: string
+          email: string
+          name?: string | null
+          nickname?: string | null
+          avatar_url?: string | null
+          role?: UserRole
+          is_super_admin?: boolean
+          onboarding_completed?: boolean
+          onboarding_step?: number
+          timezone?: string
+          locale?: string
+          two_factor_enabled?: boolean
+          two_factor_secret?: string | null
+          last_login_at?: string | null
+          login_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string | null
+          nickname?: string | null
+          avatar_url?: string | null
+          role?: UserRole
+          is_super_admin?: boolean
+          onboarding_completed?: boolean
+          onboarding_step?: number
+          timezone?: string
+          locale?: string
+          two_factor_enabled?: boolean
+          two_factor_secret?: string | null
+          last_login_at?: string | null
+          login_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      webhook_deliveries: {
+        Row: {
+          id: string
+          webhook_id: string
+          event: string
+          payload: Json
+          response_status: number | null
+          response_body: string | null
+          delivered_at: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          webhook_id: string
+          event: string
+          payload: Json
+          response_status?: number | null
+          response_body?: string | null
+          delivered_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          webhook_id?: string
+          event?: string
+          payload?: Json
+          response_status?: number | null
+          response_body?: string | null
+          delivered_at?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+      webhooks: {
+        Row: {
+          id: string
+          user_id: string
+          url: string
+          events: string[]
+          secret: string
+          is_active: boolean
+          last_triggered_at: string | null
+          failure_count: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          archived_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          url: string
+          events: string[]
+          secret: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          failure_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          url?: string
+          events?: string[]
+          secret?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          failure_count?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          archived_at?: string | null
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      check_rate_limit: {
+        Args: {
+          p_key: string
+          p_max: number
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+  }
+}
+
+// Export typed helper interfaces
+export type Organization = Database['public']['Tables']['organizations']['Row']
+export type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
+export type OrganizationUpdate = Database['public']['Tables']['organizations']['Update']
+
+export type User = Database['public']['Tables']['users']['Row']
+export type UserInsert = Database['public']['Tables']['users']['Insert']
+export type UserUpdate = Database['public']['Tables']['users']['Update']
+
+export type UserPreferences = Database['public']['Tables']['user_preferences']['Row']
+export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
+export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update']
+
+export type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
+export type OrganizationMemberInsert = Database['public']['Tables']['organization_members']['Insert']
+export type OrganizationMemberUpdate = Database['public']['Tables']['organization_members']['Update']
+
+export type OrganizationInvite = Database['public']['Tables']['organization_invites']['Row']
+export type OrganizationInviteInsert = Database['public']['Tables']['organization_invites']['Insert']
+export type OrganizationInviteUpdate = Database['public']['Tables']['organization_invites']['Update']
+
+export type EmailAccount = Database['public']['Tables']['email_accounts']['Row']
+export type EmailAccountInsert = Database['public']['Tables']['email_accounts']['Insert']
+export type EmailAccountUpdate = Database['public']['Tables']['email_accounts']['Update']
+
+export type OAuthToken = Database['public']['Tables']['oauth_tokens']['Row']
+export type OAuthTokenInsert = Database['public']['Tables']['oauth_tokens']['Insert']
+export type OAuthTokenUpdate = Database['public']['Tables']['oauth_tokens']['Update']
+
+export type Message = Database['public']['Tables']['messages']['Row']
+export type MessageInsert = Database['public']['Tables']['messages']['Insert']
+export type MessageUpdate = Database['public']['Tables']['messages']['Update']
+
+export type FolderMapping = Database['public']['Tables']['folder_mappings']['Row']
+export type FolderMappingInsert = Database['public']['Tables']['folder_mappings']['Insert']
+export type FolderMappingUpdate = Database['public']['Tables']['folder_mappings']['Update']
+
+export type Draft = Database['public']['Tables']['drafts']['Row']
+export type DraftInsert = Database['public']['Tables']['drafts']['Insert']
+export type DraftUpdate = Database['public']['Tables']['drafts']['Update']
+
+export type Signature = Database['public']['Tables']['signatures']['Row']
+export type SignatureInsert = Database['public']['Tables']['signatures']['Insert']
+export type SignatureUpdate = Database['public']['Tables']['signatures']['Update']
+
+export type EmailTemplate = Database['public']['Tables']['email_templates']['Row']
+export type EmailTemplateInsert = Database['public']['Tables']['email_templates']['Insert']
+export type EmailTemplateUpdate = Database['public']['Tables']['email_templates']['Update']
+
+export type ScheduledEmail = Database['public']['Tables']['scheduled_emails']['Row']
+export type ScheduledEmailInsert = Database['public']['Tables']['scheduled_emails']['Insert']
+export type ScheduledEmailUpdate = Database['public']['Tables']['scheduled_emails']['Update']
+
+export type SnoozedEmail = Database['public']['Tables']['snoozed_emails']['Row']
+export type SnoozedEmailInsert = Database['public']['Tables']['snoozed_emails']['Insert']
+export type SnoozedEmailUpdate = Database['public']['Tables']['snoozed_emails']['Update']
+
+export type EmailRule = Database['public']['Tables']['email_rules']['Row']
+export type EmailRuleInsert = Database['public']['Tables']['email_rules']['Insert']
+export type EmailRuleUpdate = Database['public']['Tables']['email_rules']['Update']
+
+export type CustomLabel = Database['public']['Tables']['custom_labels']['Row']
+export type CustomLabelInsert = Database['public']['Tables']['custom_labels']['Insert']
+export type CustomLabelUpdate = Database['public']['Tables']['custom_labels']['Update']
+
+export type MessageLabel = Database['public']['Tables']['message_labels']['Row']
+export type MessageLabelInsert = Database['public']['Tables']['message_labels']['Insert']
+export type MessageLabelUpdate = Database['public']['Tables']['message_labels']['Update']
+
+export type Contact = Database['public']['Tables']['contacts']['Row']
+export type ContactInsert = Database['public']['Tables']['contacts']['Insert']
+export type ContactUpdate = Database['public']['Tables']['contacts']['Update']
+
+export type CalendarEvent = Database['public']['Tables']['calendar_events']['Row']
+export type CalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert']
+export type CalendarEventUpdate = Database['public']['Tables']['calendar_events']['Update']
+
+export type CalendarMetadata = Database['public']['Tables']['calendar_metadata']['Row']
+export type CalendarMetadataInsert = Database['public']['Tables']['calendar_metadata']['Insert']
+export type CalendarMetadataUpdate = Database['public']['Tables']['calendar_metadata']['Update']
+
+export type SmsMessage = Database['public']['Tables']['sms_messages']['Row']
+export type SmsMessageInsert = Database['public']['Tables']['sms_messages']['Insert']
+export type SmsMessageUpdate = Database['public']['Tables']['sms_messages']['Update']
+
+export type SpamReport = Database['public']['Tables']['spam_reports']['Row']
+export type SpamReportInsert = Database['public']['Tables']['spam_reports']['Insert']
+export type SpamReportUpdate = Database['public']['Tables']['spam_reports']['Update']
+
+export type Subscription = Database['public']['Tables']['subscriptions']['Row']
+export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert']
+export type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update']
+
+export type Invoice = Database['public']['Tables']['invoices']['Row']
+export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert']
+export type InvoiceUpdate = Database['public']['Tables']['invoices']['Update']
+
+export type PaymentMethod = Database['public']['Tables']['payment_methods']['Row']
+export type PaymentMethodInsert = Database['public']['Tables']['payment_methods']['Insert']
+export type PaymentMethodUpdate = Database['public']['Tables']['payment_methods']['Update']
+
+export type UsageTracking = Database['public']['Tables']['usage_tracking']['Row']
+export type UsageTrackingInsert = Database['public']['Tables']['usage_tracking']['Insert']
+export type UsageTrackingUpdate = Database['public']['Tables']['usage_tracking']['Update']
+
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row']
+export type AuditLogInsert = Database['public']['Tables']['audit_logs']['Insert']
+export type AuditLogUpdate = Database['public']['Tables']['audit_logs']['Update']
+
+export type ImpersonateSession = Database['public']['Tables']['impersonate_sessions']['Row']
+export type ImpersonateSessionInsert = Database['public']['Tables']['impersonate_sessions']['Insert']
+export type ImpersonateSessionUpdate = Database['public']['Tables']['impersonate_sessions']['Update']
+
+export type SystemSetting = Database['public']['Tables']['system_settings']['Row']
+export type SystemSettingInsert = Database['public']['Tables']['system_settings']['Insert']
+export type SystemSettingUpdate = Database['public']['Tables']['system_settings']['Update']
+
+export type Webhook = Database['public']['Tables']['webhooks']['Row']
+export type WebhookInsert = Database['public']['Tables']['webhooks']['Insert']
+export type WebhookUpdate = Database['public']['Tables']['webhooks']['Update']
+
+export type WebhookDelivery = Database['public']['Tables']['webhook_deliveries']['Row']
+export type WebhookDeliveryInsert = Database['public']['Tables']['webhook_deliveries']['Insert']
+export type WebhookDeliveryUpdate = Database['public']['Tables']['webhook_deliveries']['Update']
+
+export type ApiKey = Database['public']['Tables']['api_keys']['Row']
+export type ApiKeyInsert = Database['public']['Tables']['api_keys']['Insert']
+export type ApiKeyUpdate = Database['public']['Tables']['api_keys']['Update']
+
+export type EnterpriseLead = Database['public']['Tables']['enterprise_leads']['Row']
+export type EnterpriseLeadInsert = Database['public']['Tables']['enterprise_leads']['Insert']
+export type EnterpriseLeadUpdate = Database['public']['Tables']['enterprise_leads']['Update']
+
+export type Notification = Database['public']['Tables']['notification_queue']['Row']
+export type NotificationInsert = Database['public']['Tables']['notification_queue']['Insert']
+export type NotificationUpdate = Database['public']['Tables']['notification_queue']['Update']
+
+export type BackupCode = Database['public']['Tables']['backup_codes']['Row']
+export type BackupCodeInsert = Database['public']['Tables']['backup_codes']['Insert']
+export type BackupCodeUpdate = Database['public']['Tables']['backup_codes']['Update']
+
+export type UserLoginTracking = Database['public']['Tables']['user_login_tracking']['Row']
+export type UserLoginTrackingInsert = Database['public']['Tables']['user_login_tracking']['Insert']
+export type UserLoginTrackingUpdate = Database['public']['Tables']['user_login_tracking']['Update']
+
+export type RateLimit = Database['public']['Tables']['rate_limits']['Row']
+export type RateLimitInsert = Database['public']['Tables']['rate_limits']['Insert']
+export type RateLimitUpdate = Database['public']['Tables']['rate_limits']['Update']
+
+export type SyncCheckpoint = Database['public']['Tables']['sync_checkpoints']['Row']
+export type SyncCheckpointInsert = Database['public']['Tables']['sync_checkpoints']['Insert']
+export type SyncCheckpointUpdate = Database['public']['Tables']['sync_checkpoints']['Update']
+
+export type PrioritySender = Database['public']['Tables']['priority_senders']['Row']
+export type PrioritySenderInsert = Database['public']['Tables']['priority_senders']['Insert']
+export type PrioritySenderUpdate = Database['public']['Tables']['priority_senders']['Update']
+
+export type SenderGroup = Database['public']['Tables']['sender_groups']['Row']
+export type SenderGroupInsert = Database['public']['Tables']['sender_groups']['Insert']
+export type SenderGroupUpdate = Database['public']['Tables']['sender_groups']['Update']

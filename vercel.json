@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-emails",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/refresh-tokens",
+      "schedule": "*/3 * * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-emails",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/process-snoozed-emails",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

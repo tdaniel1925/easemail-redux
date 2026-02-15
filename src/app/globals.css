@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary color: Blue #4A90D9 */
+    --primary: 207 68% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Accent: Indigo #6366F1 */
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Success: Emerald #10B981 */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning: Amber #F59E0B */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+
+    /* Error/Destructive: Rose #F43F5E */
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Info: Blue */
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* Background light: #F8FAFC */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    /* Card colors */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    /* Popover colors */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Secondary */
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted */
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Border and input */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+
+    /* Ring */
+    --ring: 207 68% 56%;
+
+    /* Chart colors */
+    --chart-1: 207 68% 56%;    /* Primary blue */
+    --chart-2: 239 84% 67%;    /* Indigo */
+    --chart-3: 160 84% 39%;    /* Emerald */
+    --chart-4: 38 92% 50%;     /* Amber */
+    --chart-5: 350 89% 60%;    /* Rose */
+
+    /* Border radius */
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Background dark: #0F172A */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    /* Card colors in dark mode */
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+
+    /* Popover colors in dark mode */
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary stays the same */
+    --primary: 207 68% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Accent stays the same */
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Secondary in dark mode */
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted in dark mode */
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Border and input in dark mode */
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+
+    /* Destructive stays the same */
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success in dark mode */
+    --success: 160 71% 35%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning in dark mode */
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 9%;
+
+    /* Info in dark mode */
+    --info: 199 89% 40%;
+    --info-foreground: 0 0% 100%;
+
+    /* Chart colors in dark mode */
+    --chart-1: 207 68% 56%;
+    --chart-2: 239 84% 67%;
+    --chart-3: 160 71% 35%;
+    --chart-4: 38 92% 45%;
+    --chart-5: 350 89% 60%;
+
+    /* Ring in dark mode */
+    --ring: 207 68% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
