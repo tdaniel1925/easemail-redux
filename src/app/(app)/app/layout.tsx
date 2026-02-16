@@ -13,8 +13,6 @@ import { AppLayoutWrapper } from '@/components/app/app-layout-wrapper';
 import { AccountSwitcher } from '@/components/app/account-switcher';
 import { MobileSidebar } from '@/components/app/mobile-sidebar';
 import { designTokens } from '@/lib/design-tokens';
-import { HydrationTest } from '@/components/debug/hydration-test';
-import { RouterDiagnostic } from '@/components/debug/router-diagnostic';
 
 export default async function AppLayout({
   children,
@@ -41,8 +39,6 @@ export default async function AppLayout({
   return (
     <AppLayoutWrapper>
       <ShortcutsProvider>
-        <HydrationTest />
-        <RouterDiagnostic />
         <div className="flex min-h-screen">
           {/* Desktop Sidebar - Hidden on mobile */}
           <aside className="hidden md:block w-64 border-r border-border bg-card p-6">
