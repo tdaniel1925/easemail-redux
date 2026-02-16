@@ -192,14 +192,14 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       .order('message_date', { ascending: false })
       .limit(50);
 
-    // 6. Uncategorized messages (categories is empty array) - temporary fallback
+    // 6. Uncategorized messages (categories is empty or null) - temporary fallback
     let uncategorizedQuery = supabase
       .from('messages')
       .select('*')
       .eq('user_id', userId)
       .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
-      .eq('categories', []); // Empty array
+      .or('categories.is.null,categories.eq.{}'); // Empty array or null
 
     // Exclude blocked senders (Phase 6, Task 135)
     if (blockedEmails.length > 0) {
