@@ -22,6 +22,8 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>;
 
 export function SignInForm() {
+  console.log('[DEBUG] SignInForm component rendered - VERSION 2');
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/app/inbox';
@@ -39,6 +41,9 @@ export function SignInForm() {
   });
 
   const email = watch('email');
+
+  // Debug: Log errors when they change
+  console.log('[DEBUG] Form errors:', errors);
 
   const onSubmit = async (data: SignInFormData) => {
     console.log('[DEBUG CLIENT] Form submitted with email:', data.email);
@@ -115,7 +120,14 @@ export function SignInForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          console.log('[DEBUG] Form onSubmit triggered');
+          alert('DEBUG: Form onSubmit triggered');
+          handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-4"
+      >
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -166,7 +178,16 @@ export function SignInForm() {
           </Label>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading}
+          onClick={(e) => {
+            console.log('[DEBUG] Button clicked!');
+            alert('DEBUG: Button clicked!');
+            console.log('[DEBUG] Form errors at click:', errors);
+          }}
+        >
           {isLoading ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
