@@ -24,7 +24,11 @@ import { toast } from 'sonner';
 import { useAccount } from '@/hooks/use-account';
 import { SignatureSelector } from '@/components/email/signature-selector';
 import { useSignature } from '@/hooks/use-signature';
+import { useAttachments } from '@/hooks/use-attachments';
+import { AttachmentUploader } from '@/components/email/attachment-uploader';
+import { AttachmentList } from '@/components/email/attachment-list';
 import type { Signature } from '@/types/database';
+import type { AttachmentMetadata } from '@/types/attachment';
 
 interface ComposerProps {
   onClose: () => void;
@@ -42,6 +46,7 @@ export interface EmailData {
   bcc: string[];
   subject: string;
   body_html: string;
+  attachments?: AttachmentMetadata[];
 }
 
 export function EmailComposer({
@@ -61,6 +66,28 @@ export function EmailComposer({
   const [showBcc, setShowBcc] = useState(false);
   const [sending, setSending] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<Signature | null>(null);
+
+  // Generate draft ID for attachment grouping
+  const [draftId] = useState(() => crypto.randomUUID());
+
+  // Attachment management
+  const {
+    attachments,
+    upload: uploadAttachment,
+    uploadMultiple: uploadMultipleAttachments,
+    remove: removeAttachment,
+    getCompletedAttachments,
+    isUploading,
+    isMaxAttachments,
+  } = useAttachments({
+    messageId: draftId,
+    onUploadComplete: (attachment) => {
+      toast.success(`Attached ${attachment.name}`);
+    },
+    onUploadError: (error) => {
+      toast.error(error);
+    },
+  });
 
   // Load signatures for the selected account
   const { defaultSignature } = useSignature({
@@ -161,6 +188,9 @@ export function EmailComposer({
     setSending(true);
 
     try {
+      // Get completed attachments
+      const completedAttachments = getCompletedAttachments();
+
       const emailData: EmailData = {
         email_account_id: sendingAccountId,
         to: toEmails,
@@ -168,6 +198,7 @@ export function EmailComposer({
         bcc: bccEmails,
         subject: subject.trim(),
         body_html: editor.getHTML(),
+        attachments: completedAttachments.length > 0 ? completedAttachments : undefined,
       };
 
       if (onSend) {
@@ -332,6 +363,26 @@ export function EmailComposer({
               value={selectedSignature?.id || null}
               onChange={setSelectedSignature}
               allowNone={true}
+            />
+          </div>
+
+          {/* Attachment List */}
+          {attachments.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">
+                Attachments ({attachments.length})
+              </Label>
+              <AttachmentList attachments={attachments} onRemove={removeAttachment} />
+            </div>
+          )}
+
+          {/* Attachment Uploader */}
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Attach Files</Label>
+            <AttachmentUploader
+              onFilesSelected={uploadMultipleAttachments}
+              isUploading={isUploading}
+              disabled={isMaxAttachments}
             />
           </div>
         </div>
