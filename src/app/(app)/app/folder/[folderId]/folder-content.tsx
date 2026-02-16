@@ -17,7 +17,6 @@ export function FolderContent({ userId, folderId, folderName }: FolderContentPro
 
   // Set up real-time sync
   useRealtimeSync((event) => {
-    console.log('[Folder] Real-time event received:', event);
     // Refresh folder when new messages arrive or updates occur
     if (event.eventType === 'INSERT' || event.eventType === 'UPDATE') {
       setRefreshKey((prev) => prev + 1);

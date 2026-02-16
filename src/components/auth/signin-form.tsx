@@ -22,8 +22,6 @@ const signInSchema = z.object({
 type SignInFormData = z.infer<typeof signInSchema>;
 
 export function SignInForm() {
-  console.log('[DEBUG] SignInForm component rendered - VERSION 2');
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/app/inbox';
@@ -46,34 +44,21 @@ export function SignInForm() {
 
   const email = watch('email');
 
-  // Debug: Log errors when they change
-  console.log('[DEBUG] Form errors:', errors);
-
   const onSubmit = async (data: SignInFormData) => {
-    console.log('[DEBUG CLIENT] Form submitted with email:', data.email);
-    alert(`DEBUG: Form submitted with email: ${data.email}`);
     setIsLoading(true);
 
     try {
-      console.log('[DEBUG CLIENT] Calling signIn action...');
       const result = await signIn(data.email, data.password, data.rememberMe);
-      console.log('[DEBUG CLIENT] signIn result:', result);
-      alert(`DEBUG: signIn result - error: ${result.error}, success: ${result.success}`);
 
       if (result.error) {
-        console.error('[DEBUG CLIENT] Login error:', result.error);
         toast.error(result.error);
         return;
       }
 
-      console.log('[DEBUG CLIENT] Login successful, redirecting to:', redirect);
       toast.success('Signed in successfully');
-      alert(`DEBUG: Redirecting to ${redirect}`);
       router.push(redirect);
       router.refresh();
     } catch (error) {
-      console.error('[DEBUG CLIENT] Unexpected error:', error);
-      alert(`DEBUG: Exception caught - ${error}`);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -125,11 +110,7 @@ export function SignInForm() {
   return (
     <div className="space-y-6">
       <form
-        onSubmit={(e) => {
-          console.log('[DEBUG] Form onSubmit triggered');
-          alert('DEBUG: Form onSubmit triggered');
-          handleSubmit(onSubmit)(e);
-        }}
+        onSubmit={handleSubmit(onSubmit)}
         className="space-y-4"
       >
         <div className="space-y-2">
@@ -193,11 +174,6 @@ export function SignInForm() {
           type="submit"
           className="w-full"
           disabled={isLoading}
-          onClick={(e) => {
-            console.log('[DEBUG] Button clicked!');
-            alert('DEBUG: Button clicked!');
-            console.log('[DEBUG] Form errors at click:', errors);
-          }}
         >
           {isLoading ? 'Signing in...' : 'Sign in'}
         </Button>

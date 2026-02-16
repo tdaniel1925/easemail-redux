@@ -22,7 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { designTokens } from '@/lib/design-tokens';
 import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAccount } from '@/hooks/use-account';
 
 const navItems = [
@@ -94,16 +94,7 @@ export function AppNav() {
   const [customFolders, setCustomFolders] = useState<CustomFolder[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (selectedAccountId) {
-      fetchCustomFolders();
-    } else {
-      setCustomFolders([]);
-      setLoading(false);
-    }
-  }, [selectedAccountId]);
-
-  async function fetchCustomFolders() {
+  const fetchCustomFolders = useCallback(async () => {
     if (!selectedAccountId) return;
 
     const supabase = createClient();
@@ -123,7 +114,16 @@ export function AppNav() {
 
     setCustomFolders(data || []);
     setLoading(false);
-  }
+  }, [selectedAccountId]);
+
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetchCustomFolders();
+    } else {
+      setCustomFolders([]);
+      setLoading(false);
+    }
+  }, [selectedAccountId, fetchCustomFolders]);
 
   return (
     <nav className="space-y-6">

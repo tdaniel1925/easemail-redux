@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -45,14 +45,7 @@ export function AIExtractEventButton({
   const [calendars, setCalendars] = useState<CalendarMetadata[]>([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
 
-  // Fetch calendars when account is selected
-  useEffect(() => {
-    if (selectedAccountId) {
-      fetchCalendars();
-    }
-  }, [selectedAccountId]);
-
-  const fetchCalendars = async () => {
+  const fetchCalendars = useCallback(async () => {
     if (!selectedAccountId) return;
 
     try {
@@ -72,7 +65,14 @@ export function AIExtractEventButton({
     } catch (error) {
       console.error('Error fetching calendars:', error);
     }
-  };
+  }, [selectedAccountId]);
+
+  // Fetch calendars when account is selected
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetchCalendars();
+    }
+  }, [selectedAccountId, fetchCalendars]);
 
   const handleExtract = async () => {
     setLoading(true);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { SmartInbox } from '@/components/inbox/smart-inbox';
 import { MessageRowSkeleton } from '@/components/inbox/message-row-skeleton';
@@ -27,24 +27,7 @@ export function InboxContent({ userId }: InboxContentProps) {
   // Check vacation responder status
   const { vacationResponder, isActive } = useVacation(selectedAccountId || '');
 
-  // Set up real-time sync
-  useRealtimeSync((event) => {
-    console.log('[Inbox] Real-time event received:', event);
-    // Refresh inbox when new messages arrive
-    if (event.eventType === 'INSERT' || event.eventType === 'UPDATE') {
-      checkMessages();
-    }
-  });
-
-  useEffect(() => {
-    if (selectedAccountId) {
-      checkMessages();
-    } else {
-      setLoading(true);
-    }
-  }, [selectedAccountId]);
-
-  async function checkMessages() {
+  const checkMessages = useCallback(async () => {
     if (!selectedAccountId) return;
 
     setLoading(true);
@@ -59,7 +42,23 @@ export function InboxContent({ userId }: InboxContentProps) {
 
     setHasMessages((count || 0) > 0);
     setLoading(false);
-  }
+  }, [selectedAccountId, userId]);
+
+  // Set up real-time sync
+  useRealtimeSync((event) => {
+    // Refresh inbox when new messages arrive
+    if (event.eventType === 'INSERT' || event.eventType === 'UPDATE') {
+      checkMessages();
+    }
+  });
+
+  useEffect(() => {
+    if (selectedAccountId) {
+      checkMessages();
+    } else {
+      setLoading(true);
+    }
+  }, [selectedAccountId, checkMessages]);
 
   return (
     <div className="p-8">

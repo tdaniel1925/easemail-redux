@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MessageRow } from './message-row';
 import { MessageRowSkeleton } from './message-row-skeleton';
 import { GatekeeperCard } from './gatekeeper-card';
@@ -35,14 +35,8 @@ export function SmartInbox({ userId }: SmartInboxProps) {
   const [sections, setSections] = useState<MessageSection[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (selectedAccountId) {
-      fetchInboxSections();
-    }
-  }, [userId, selectedAccountId]);
-
   // Helper function to group messages into threads
-  function groupMessagesIntoThreads(messages: Message[]): MessageThread[] {
+  const groupMessagesIntoThreads = useCallback((messages: Message[]): MessageThread[] => {
     const threadMap = new Map<string, Message[]>();
 
     // Group messages by provider_thread_id
@@ -78,9 +72,9 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     );
 
     return threads;
-  }
+  }, []);
 
-  async function fetchInboxSections() {
+  const fetchInboxSections = useCallback(async () => {
     if (!selectedAccountId) return;
 
     const supabase = createClient();
@@ -269,7 +263,13 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     setSections(allSections);
 
     setLoading(false);
-  }
+  }, [userId, selectedAccountId, groupMessagesIntoThreads]);
+
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetchInboxSections();
+    }
+  }, [selectedAccountId, fetchInboxSections]);
 
   function toggleSection(sectionId: string) {
     setSections((prev) =>

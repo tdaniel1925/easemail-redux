@@ -105,11 +105,6 @@ export async function POST(req: NextRequest) {
     // Process each notification
     const results = [];
     for (const notification of payload.value) {
-      console.log('[Microsoft Webhook] Received notification:', {
-        subscriptionId: notification.subscriptionId,
-        changeType: notification.changeType,
-        resource: notification.resource,
-      });
 
       // Trigger delta sync for all Microsoft accounts
       // TODO: Improve to only sync the account matching notification.subscriptionId
@@ -123,11 +118,6 @@ export async function POST(req: NextRequest) {
           subscriptionId: notification.subscriptionId,
           status: 'triggered',
         });
-
-        console.log(
-          '[Microsoft Webhook] Delta sync triggered for account:',
-          account.id
-        );
       }
     }
 

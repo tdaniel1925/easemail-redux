@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -27,13 +27,7 @@ export function SmartReplyButtons({
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    if (expanded && replies.length === 0) {
-      fetchSmartReplies();
-    }
-  }, [expanded, messageId]);
-
-  const fetchSmartReplies = async () => {
+  const fetchSmartReplies = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -60,7 +54,13 @@ export function SmartReplyButtons({
     } finally {
       setLoading(false);
     }
-  };
+  }, [messageId]);
+
+  useEffect(() => {
+    if (expanded && replies.length === 0) {
+      fetchSmartReplies();
+    }
+  }, [expanded, replies.length, fetchSmartReplies]);
 
   const getToneColor = (tone: string) => {
     switch (tone) {

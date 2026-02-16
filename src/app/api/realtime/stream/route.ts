@@ -119,10 +119,7 @@ export async function GET(req: NextRequest) {
           }
         )
         .subscribe((status: string) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('[SSE Stream] Subscribed to realtime updates for user:', user.id);
-          } else if (status === 'CLOSED') {
-            console.log('[SSE Stream] Realtime subscription closed for user:', user.id);
+          if (status === 'CLOSED') {
             clearInterval(heartbeatInterval);
           } else if (status === 'CHANNEL_ERROR') {
             console.error('[SSE Stream] Realtime subscription error for user:', user.id);
@@ -142,7 +139,6 @@ export async function GET(req: NextRequest) {
 
       // Clean up on connection close
       req.signal.addEventListener('abort', async () => {
-        console.log('[SSE Stream] Connection closed for user:', user.id);
         clearInterval(heartbeatInterval);
 
         // Unsubscribe from Supabase Realtime

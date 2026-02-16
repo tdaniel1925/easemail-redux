@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MessageRow } from './message-row';
 import { MessageRowSkeleton } from './message-row-skeleton';
 import { createClient } from '@/lib/supabase/client';
@@ -28,13 +28,7 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (selectedAccountId) {
-      fetchMessages();
-    }
-  }, [userId, folderType, folderId, selectedAccountId]);
-
-  function groupMessagesIntoThreads(messages: Message[]): MessageThread[] {
+  const groupMessagesIntoThreads = useCallback((messages: Message[]): MessageThread[] => {
     const threadMap = new Map<string, Message[]>();
 
     for (const message of messages) {
@@ -68,9 +62,9 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
     );
 
     return threads;
-  }
+  }, []);
 
-  async function fetchMessages() {
+  const fetchMessages = useCallback(async () => {
     if (!selectedAccountId) return;
 
     const supabase = createClient();
@@ -99,7 +93,13 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
     }
 
     setLoading(false);
-  }
+  }, [userId, selectedAccountId, folderId, folderType, groupMessagesIntoThreads]);
+
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetchMessages();
+    }
+  }, [selectedAccountId, fetchMessages]);
 
   if (!selectedAccountId || loading) {
     return (

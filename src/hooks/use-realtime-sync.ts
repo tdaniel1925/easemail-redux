@@ -75,7 +75,6 @@ export function useRealtimeSync(
       // Connection established
       eventSource.addEventListener('connected', (event) => {
         const data = JSON.parse(event.data);
-        console.log('[SSE] Connected:', data);
         setState((prev) => ({
           ...prev,
           connected: true,
@@ -88,7 +87,6 @@ export function useRealtimeSync(
       // Message event (new email or update)
       eventSource.addEventListener('message', (event) => {
         const realtimeEvent = JSON.parse(event.data) as RealtimeEvent;
-        console.log('[SSE] Message event:', realtimeEvent);
 
         setState((prev) => ({
           ...prev,
@@ -124,7 +122,6 @@ export function useRealtimeSync(
         if (reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
           const delay = reconnectDelay * reconnectAttempts.current;
-          console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`);
 
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();

@@ -178,17 +178,6 @@ export function EmailComposer({
     }
   }, [selectedSignature, editor]);
 
-  // Auto-save draft every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (editor && (to || subject || editor.getHTML() !== '<p></p>')) {
-        saveDraft();
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [to, subject, editor]);
-
   const saveDraft = useCallback(async () => {
     if (!editor) return;
 
@@ -200,6 +189,17 @@ export function EmailComposer({
       console.error('Draft save failed:', error);
     }
   }, [editor]);
+
+  // Auto-save draft every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (editor && (to || subject || editor.getHTML() !== '<p></p>')) {
+        saveDraft();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [to, subject, editor, saveDraft]);
 
   const handleSend = async () => {
     if (!editor) return;

@@ -15,7 +15,6 @@ export function SentContent({ userId }: SentContentProps) {
 
   // Set up real-time sync
   useRealtimeSync((event) => {
-    console.log('[Sent] Real-time event received:', event);
     // Refresh sent folder when new messages arrive or updates occur
     if (event.eventType === 'INSERT' || event.eventType === 'UPDATE') {
       setRefreshKey((prev) => prev + 1);

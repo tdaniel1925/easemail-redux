@@ -52,10 +52,6 @@ export async function POST(req: NextRequest) {
     }
 
     const webhookData = verification.data as GoogleWebhookData;
-    console.log('[Google Webhook] Received notification:', {
-      emailAddress: webhookData.emailAddress,
-      historyId: webhookData.historyId,
-    });
 
     // Find email account by email address
     const supabase = await createClient();
@@ -87,8 +83,6 @@ export async function POST(req: NextRequest) {
     performDeltaSync(account.id).catch((error) => {
       console.error('[Google Webhook] Delta sync failed:', error);
     });
-
-    console.log('[Google Webhook] Delta sync triggered for account:', account.id);
 
     // Respond quickly to Google to acknowledge receipt
     return NextResponse.json({

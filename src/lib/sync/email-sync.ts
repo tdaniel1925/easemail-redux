@@ -477,7 +477,6 @@ async function syncMessage(
         // If spam detected with high confidence (>0.7), move to spam folder
         if (spamResult.isSpam && spamResult.confidence > 0.7) {
           message.folder_type = 'spam';
-          console.log(`[Spam Detection] Moved message to spam: ${message.subject} (confidence: ${spamResult.confidence})`);
         }
       } catch (spamError) {
         // Don't fail the entire sync if spam detection fails
