@@ -22,6 +22,7 @@ export interface QueueEmailParams {
   in_reply_to?: string;
   references?: string;
   delay_seconds?: number;
+  read_receipt_enabled?: boolean;
 }
 
 export interface QueuedEmail {

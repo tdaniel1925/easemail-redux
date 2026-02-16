@@ -463,6 +463,28 @@ async function syncMessage(
       );
     }
 
+    // Spam detection for inbox messages
+    if (message.folder_type === 'inbox') {
+      try {
+        const { detectSpam } = await import('@/lib/ai/client');
+        const spamResult = await detectSpam(
+          message.from_email,
+          message.from_name || null,
+          message.subject || null,
+          message.body_text || message.snippet || ''
+        );
+
+        // If spam detected with high confidence (>0.7), move to spam folder
+        if (spamResult.isSpam && spamResult.confidence > 0.7) {
+          message.folder_type = 'spam';
+          console.log(`[Spam Detection] Moved message to spam: ${message.subject} (confidence: ${spamResult.confidence})`);
+        }
+      } catch (spamError) {
+        // Don't fail the entire sync if spam detection fails
+        console.error('Spam detection failed, continuing sync:', spamError);
+      }
+    }
+
     const { data: syncedMessage } = await supabase.from('messages').upsert(
       {
         user_id: account.user_id,
@@ -500,6 +522,14 @@ async function syncMessage(
     // Run automation: rules engine, gatekeeper, auto-create contact
     if (syncedMessage) {
       await handleMessageReceived(account.user_id, syncedMessage);
+
+      // Check for vacation auto-reply
+      try {
+        const { handleVacationAutoReply } = await import('@/lib/vacation/auto-reply');
+        await handleVacationAutoReply(syncedMessage);
+      } catch (vacationError) {
+        console.error('Vacation auto-reply failed:', vacationError);
+      }
     }
 
     // Update folder counts

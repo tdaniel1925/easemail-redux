@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -29,6 +30,8 @@ import { AttachmentUploader } from '@/components/email/attachment-uploader';
 import { AttachmentList } from '@/components/email/attachment-list';
 import { useUndoSend } from '@/hooks/use-undo-send';
 import { showUndoSendToast } from '@/components/email/undo-send-toast';
+import { useSmartCompose } from '@/hooks/use-smart-compose';
+import { SmartComposeSuggestion } from '@/components/email/smart-compose-suggestion';
 import type { Signature } from '@/types/database';
 import type { AttachmentMetadata } from '@/types/attachment';
 import type { Recipient } from '@/types/email';
@@ -69,6 +72,7 @@ export function EmailComposer({
   const [showBcc, setShowBcc] = useState(false);
   const [sending, setSending] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<Signature | null>(null);
+  const [trackReadReceipt, setTrackReadReceipt] = useState(false);
 
   // Generate draft ID for attachment grouping
   const [draftId] = useState(() => crypto.randomUUID());
@@ -101,6 +105,19 @@ export function EmailComposer({
   // Undo send functionality
   const { queueSend, cancelSend } = useUndoSend();
 
+  // Smart compose suggestions
+  const [editorText, setEditorText] = useState('');
+  const {
+    suggestion,
+    confidence,
+    acceptSuggestion,
+    dismissSuggestion,
+  } = useSmartCompose({
+    currentText: editorText,
+    subject: subject,
+    enabled: editorText.length > 10, // Only show suggestions when user has typed something
+  });
+
   // Initialize sending account to currently selected account
   useEffect(() => {
     if (selectedAccountId && !sendingAccountId) {
@@ -116,7 +133,22 @@ export function EmailComposer({
         class: 'prose max-w-none focus:outline-none min-h-[300px] p-4',
       },
     },
+    onUpdate: ({ editor }) => {
+      // Update editor text for smart compose
+      setEditorText(editor.getText());
+    },
   });
+
+  // Smart compose: Accept suggestion handler
+  const handleAcceptSuggestion = useCallback(() => {
+    if (!editor || !suggestion) return '';
+    const accepted = acceptSuggestion();
+    if (accepted) {
+      // Insert suggestion at the end of current content
+      editor.commands.insertContent(' ' + accepted);
+    }
+    return accepted;
+  }, [editor, suggestion, acceptSuggestion]);
 
   // Auto-select default signature when account changes
   useEffect(() => {
@@ -214,6 +246,7 @@ export function EmailComposer({
         attachments: completedAttachments.length > 0 ? completedAttachments : undefined,
         signature_id: selectedSignature?.id,
         delay_seconds: 5, // 5 second undo window
+        read_receipt_enabled: trackReadReceipt,
       });
 
       if (!queued) {
@@ -364,6 +397,17 @@ export function EmailComposer({
             <EditorContent editor={editor} />
           </div>
 
+          {/* Smart Compose Suggestion */}
+          {suggestion && confidence >= 0.5 && (
+            <SmartComposeSuggestion
+              suggestion={suggestion}
+              confidence={confidence}
+              onAccept={handleAcceptSuggestion}
+              onDismiss={dismissSuggestion}
+              className="mt-2"
+            />
+          )}
+
           {/* Signature Selector */}
           <div className="flex items-center gap-2">
             <Label className="text-sm text-muted-foreground">Signature:</Label>
@@ -399,15 +443,30 @@ export function EmailComposer({
 
       {/* Footer */}
       <div className="flex items-center justify-between border-t p-4">
-        <div className="flex gap-2">
-          <Button onClick={handleSend} disabled={sending}>
-            <Send className="mr-2 h-4 w-4" />
-            {sending ? 'Sending...' : 'Send'}
-          </Button>
-          <Button variant="outline" onClick={saveDraft}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Draft
-          </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Button onClick={handleSend} disabled={sending}>
+              <Send className="mr-2 h-4 w-4" />
+              {sending ? 'Sending...' : 'Send'}
+            </Button>
+            <Button variant="outline" onClick={saveDraft}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Draft
+            </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="read-receipt"
+              checked={trackReadReceipt}
+              onCheckedChange={(checked) => setTrackReadReceipt(checked === true)}
+            />
+            <label
+              htmlFor="read-receipt"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Request read receipt
+            </label>
+          </div>
         </div>
         <Button variant="ghost" onClick={onClose}>
           Discard

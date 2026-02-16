@@ -49,6 +49,22 @@ export interface CategorizedMessage {
   category: 'people' | 'newsletter' | 'notification' | 'promotion' | 'social';
 }
 
+export interface SpamDetectionResult {
+  isSpam: boolean;
+  confidence: number; // 0-1 scale
+  reason: string;
+}
+
+export interface SmartReply {
+  text: string;
+  tone: 'professional' | 'friendly' | 'brief';
+}
+
+export interface SmartComposeResult {
+  suggestion: string;
+  confidence: number; // 0-1 scale
+}
+
 /**
  * Remix email content with specified tone
  */
@@ -240,6 +256,171 @@ Return valid JSON array: [{"id": "string", "category": "string"}]`;
   } catch {
     console.error('Failed to parse categorization response:', content);
     throw new Error('Invalid categorization response format');
+  }
+}
+
+/**
+ * Detect if email is spam using AI
+ */
+export async function detectSpam(
+  fromEmail: string,
+  fromName: string | null,
+  subject: string | null,
+  body: string
+): Promise<SpamDetectionResult> {
+  const systemPrompt = `You are a spam detection system. Analyze the email and determine if it's spam.
+
+Spam indicators:
+- Suspicious sender addresses (typos, random chars, weird domains)
+- Common spam keywords (lottery, prize, inheritance, urgent action, verify account)
+- Too many links or suspicious URLs
+- Poor grammar/spelling (intentional misspellings to bypass filters)
+- Excessive capitalization or exclamation marks
+- Requests for personal/financial info
+- Impersonation attempts
+
+Return valid JSON with this exact structure:
+{
+  "isSpam": true/false,
+  "confidence": 0.0-1.0,
+  "reason": "brief explanation"
+}`;
+
+  const userPrompt = `From: ${fromName || ''} <${fromEmail}>
+Subject: ${subject || '(no subject)'}
+
+${body.substring(0, 2000)}`; // Limit body to 2000 chars for token efficiency
+
+  const response = await openai.chat.completions.create({
+    model: process.env.AI_MODEL || 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.2, // Low temp for consistent spam detection
+    max_tokens: 150,
+    response_format: { type: 'json_object' },
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    // Default to not spam if AI fails
+    return { isSpam: false, confidence: 0, reason: 'AI detection failed' };
+  }
+
+  try {
+    const parsed = JSON.parse(content) as SpamDetectionResult;
+    return parsed;
+  } catch {
+    console.error('Failed to parse spam detection response:', content);
+    return { isSpam: false, confidence: 0, reason: 'Invalid response format' };
+  }
+}
+
+/**
+ * Generate smart reply suggestions for an email
+ */
+export async function generateSmartReply(
+  emailBody: string,
+  emailSubject: string,
+  fromEmail: string
+): Promise<SmartReply[]> {
+  const systemPrompt = `You are an email reply assistant. Generate 3 different reply suggestions:
+1. A professional/formal reply
+2. A friendly/casual reply
+3. A brief/short reply
+
+Each reply should be contextually appropriate and maintain professional standards.
+Return valid JSON array: [{"text": "reply text", "tone": "professional|friendly|brief"}]`;
+
+  const userPrompt = `Subject: ${emailSubject}\nFrom: ${fromEmail}\n\n${emailBody.substring(0, 1500)}`;
+
+  const response = await openai.chat.completions.create({
+    model: process.env.AI_MODEL || 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.7,
+    max_tokens: 500,
+    response_format: { type: 'json_object' },
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('Failed to generate smart replies');
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    // Handle both array response and object with replies array
+    const replies = Array.isArray(parsed) ? parsed : parsed.replies || [];
+    return replies as SmartReply[];
+  } catch {
+    console.error('Failed to parse smart reply response:', content);
+    throw new Error('Invalid smart reply response format');
+  }
+}
+
+/**
+ * Generate smart compose suggestions as user types
+ */
+export async function generateSmartCompose(
+  currentText: string,
+  context?: {
+    subject?: string;
+    replyingTo?: string; // Original email body if replying
+  }
+): Promise<SmartComposeResult> {
+  const systemPrompt = `You are an email writing assistant providing inline composition suggestions.
+
+Given partial email text, suggest the next sentence or completion. The suggestion should:
+- Flow naturally from the existing text
+- Match the tone and style
+- Be contextually appropriate
+- Be a single sentence or phrase (not multiple paragraphs)
+
+Return valid JSON: {"suggestion": "text to suggest", "confidence": 0.0-1.0}
+
+Set confidence to:
+- 0.8-1.0 if context is clear and suggestion is highly relevant
+- 0.5-0.7 if context is moderate
+- 0.0-0.4 if context is unclear (return empty suggestion)`;
+
+  let userPrompt = currentText;
+  if (context?.subject) {
+    userPrompt = `Subject: ${context.subject}\n\n${currentText}`;
+  }
+  if (context?.replyingTo) {
+    userPrompt = `Replying to:\n${context.replyingTo.substring(0, 500)}\n\nMy draft:\n${currentText}`;
+  }
+
+  const response = await openai.chat.completions.create({
+    model: process.env.AI_MODEL || 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.7,
+    max_tokens: 100,
+    response_format: { type: 'json_object' },
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    return { suggestion: '', confidence: 0 };
+  }
+
+  try {
+    const parsed = JSON.parse(content) as SmartComposeResult;
+    // Only return suggestion if confidence is above threshold
+    if (parsed.confidence < 0.5) {
+      return { suggestion: '', confidence: parsed.confidence };
+    }
+    return parsed;
+  } catch {
+    console.error('Failed to parse smart compose response:', content);
+    return { suggestion: '', confidence: 0 };
   }
 }
 

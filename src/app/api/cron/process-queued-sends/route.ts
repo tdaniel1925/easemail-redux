@@ -77,13 +77,26 @@ export async function GET(request: NextRequest) {
           attachments = undefined;
         }
 
+        // Insert read receipt tracking pixel if enabled
+        let bodyHtml = queued.body_html || queued.body;
+        if (queued.read_receipt_enabled && bodyHtml) {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const trackingPixel = `<img src="${appUrl}/api/track/open/${queued.id}" width="1" height="1" style="display:none;" alt="" />`;
+          // Insert tracking pixel at the end of the HTML body
+          if (bodyHtml.includes('</body>')) {
+            bodyHtml = bodyHtml.replace('</body>', `${trackingPixel}</body>`);
+          } else {
+            bodyHtml = `${bodyHtml}${trackingPixel}`;
+          }
+        }
+
         // Send message via provider
         const result = await provider.sendMessage(tokenResult.token, {
           to: queued.to_addresses as Array<{ email: string; name?: string | null }>,
           cc: queued.cc_addresses as Array<{ email: string; name?: string | null }> | undefined,
           bcc: queued.bcc_addresses as Array<{ email: string; name?: string | null }> | undefined,
           subject: queued.subject,
-          body_html: queued.body_html || queued.body,
+          body_html: bodyHtml,
           body_text: queued.body,
           attachments,
           reply_to_message_id: queued.in_reply_to || undefined,

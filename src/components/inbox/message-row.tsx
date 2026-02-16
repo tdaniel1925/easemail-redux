@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Star, Paperclip } from 'lucide-react';
+import { Star, Paperclip, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/message';
+import { Badge } from '@/components/ui/badge';
 
 interface MessageRowProps {
   message: Message;
@@ -96,6 +97,25 @@ export function MessageRow({ message, isPriority, threadCount }: MessageRowProps
             <span className="flex-shrink-0 text-xs text-muted-foreground">
               ({threadCount})
             </span>
+          )}
+          {/* Read receipt badge */}
+          {message.read_receipt_enabled && (
+            <Badge
+              variant={message.read_receipt_opened_at ? 'default' : 'outline'}
+              className="flex-shrink-0 text-xs gap-1"
+            >
+              {message.read_receipt_opened_at ? (
+                <>
+                  <Eye className="h-3 w-3" />
+                  Read
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-3 w-3" />
+                  Not Read
+                </>
+              )}
+            </Badge>
           )}
         </div>
 

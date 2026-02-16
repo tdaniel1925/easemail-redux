@@ -1075,6 +1075,10 @@ export type Database = {
           message_date: string
           provider_message_id: string
           provider_thread_id: string | null
+          read_receipt_enabled: boolean | null
+          read_receipt_ip: string | null
+          read_receipt_opened_at: string | null
+          read_receipt_user_agent: string | null
           reply_to: Json | null
           search_vector: unknown
           snippet: string | null
@@ -1108,6 +1112,10 @@ export type Database = {
           message_date: string
           provider_message_id: string
           provider_thread_id?: string | null
+          read_receipt_enabled?: boolean | null
+          read_receipt_ip?: string | null
+          read_receipt_opened_at?: string | null
+          read_receipt_user_agent?: string | null
           reply_to?: Json | null
           search_vector?: unknown
           snippet?: string | null
@@ -1141,6 +1149,10 @@ export type Database = {
           message_date?: string
           provider_message_id?: string
           provider_thread_id?: string | null
+          read_receipt_enabled?: boolean | null
+          read_receipt_ip?: string | null
+          read_receipt_opened_at?: string | null
+          read_receipt_user_agent?: string | null
           reply_to?: Json | null
           search_vector?: unknown
           snippet?: string | null
@@ -1895,6 +1907,7 @@ export type Database = {
           send_at: string
           canceled: boolean
           sent: boolean
+          read_receipt_enabled: boolean | null
           error: string | null
           created_at: string
           updated_at: string
@@ -1916,6 +1929,7 @@ export type Database = {
           send_at?: string
           canceled?: boolean
           sent?: boolean
+          read_receipt_enabled?: boolean | null
           error?: string | null
           created_at?: string
           updated_at?: string
@@ -1937,6 +1951,7 @@ export type Database = {
           send_at?: string
           canceled?: boolean
           sent?: boolean
+          read_receipt_enabled?: boolean | null
           error?: string | null
           created_at?: string
           updated_at?: string

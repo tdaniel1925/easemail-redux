@@ -6,11 +6,13 @@ import { SmartInbox } from '@/components/inbox/smart-inbox';
 import { RefreshButton } from '@/components/inbox/refresh-button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/layout/empty-state';
-import { Inbox } from 'lucide-react';
+import { Inbox, Calendar } from 'lucide-react';
 import { useAccount } from '@/hooks/use-account';
 import { createClient } from '@/lib/supabase/client';
 import { RealtimeIndicator } from '@/components/inbox/realtime-indicator';
 import { useRealtimeSync } from '@/hooks/use-realtime-sync';
+import { useVacation } from '@/hooks/use-vacation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface InboxContentProps {
   userId: string;
@@ -20,6 +22,9 @@ export function InboxContent({ userId }: InboxContentProps) {
   const { selectedAccountId } = useAccount();
   const [hasMessages, setHasMessages] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Check vacation responder status
+  const { vacationResponder, isActive } = useVacation(selectedAccountId || '');
 
   // Set up real-time sync
   useRealtimeSync((event) => {
@@ -67,6 +72,24 @@ export function InboxContent({ userId }: InboxContentProps) {
           <RefreshButton userId={userId} />
         </div>
       </div>
+
+      {/* Vacation Responder Active Banner */}
+      {isActive && vacationResponder && (
+        <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertDescription className="text-blue-900 dark:text-blue-100">
+            <strong>Vacation responder is active.</strong> Automatic replies are being sent to incoming emails.
+            {vacationResponder.start_date && vacationResponder.end_date && (
+              <span className="ml-1">
+                (
+                {new Date(vacationResponder.start_date).toLocaleDateString()} -
+                {new Date(vacationResponder.end_date).toLocaleDateString()}
+                )
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">

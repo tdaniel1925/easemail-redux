@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       in_reply_to,
       references,
       delay_seconds = 5, // Default 5 second delay
+      read_receipt_enabled = false,
     } = body;
 
     // Validate required fields
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         send_at: sendAt.toISOString(),
         canceled: false,
         sent: false,
+        read_receipt_enabled,
       })
       .select()
       .single();
