@@ -40,3 +40,30 @@ export interface ForwardPayload {
   cc?: Recipient[];
   bcc?: Recipient[];
 }
+
+export interface QueuedSend {
+  id: string;
+  user_id: string;
+  account_id: string;
+  to_addresses: Recipient[];
+  cc_addresses?: Recipient[] | null;
+  bcc_addresses?: Recipient[] | null;
+  subject: string;
+  body: string;
+  body_html?: string | null;
+  attachments?: {
+    name: string;
+    size: number;
+    content_type: string;
+    url: string;
+  }[] | null;
+  signature_id?: string | null;
+  in_reply_to?: string | null;
+  references?: string | null;
+  send_at: string; // ISO timestamp
+  canceled: boolean;
+  sent: boolean;
+  error?: string | null;
+  created_at: string;
+  updated_at: string;
+}

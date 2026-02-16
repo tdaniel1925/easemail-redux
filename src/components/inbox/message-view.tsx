@@ -8,6 +8,9 @@ import { MessageHeader } from './message-header';
 import { MessageBody } from './message-body';
 import { MessageActions } from './message-actions';
 import { ReplyComposer } from '@/components/email/reply-composer';
+import { SnoozeDialog } from './snooze-dialog';
+import { useSnooze } from '@/hooks/use-snooze';
+import { useRouter } from 'next/navigation';
 import type { Message } from '@/types/message';
 
 interface MessageViewProps {
@@ -16,6 +19,9 @@ interface MessageViewProps {
 
 export function MessageView({ message }: MessageViewProps) {
   const [replyMode, setReplyMode] = useState<'reply' | 'replyAll' | 'forward' | null>(null);
+  const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
+  const { snoozeEmail, isSnoozing } = useSnooze();
+  const router = useRouter();
 
   const handleReply = () => {
     setReplyMode('reply');
@@ -27,6 +33,24 @@ export function MessageView({ message }: MessageViewProps) {
 
   const handleForward = () => {
     setReplyMode('forward');
+  };
+
+  const handleSnooze = () => {
+    setShowSnoozeDialog(true);
+  };
+
+  const handleSnoozeSubmit = async (snoozeUntil: Date) => {
+    const success = await snoozeEmail({
+      messageId: message.id,
+      snoozeUntil,
+      originalFolderType: 'inbox', // Default to inbox, could be dynamic based on current view
+    });
+
+    if (success) {
+      setShowSnoozeDialog(false);
+      // Refresh the page to reflect the snoozed state
+      router.refresh();
+    }
   };
 
   const handleCloseComposer = () => {
@@ -42,6 +66,7 @@ export function MessageView({ message }: MessageViewProps) {
           onReply={handleReply}
           onReplyAll={handleReplyAll}
           onForward={handleForward}
+          onSnooze={handleSnooze}
         />
       </div>
 
@@ -60,6 +85,14 @@ export function MessageView({ message }: MessageViewProps) {
           onSent={handleCloseComposer}
         />
       )}
+
+      {/* Snooze dialog */}
+      <SnoozeDialog
+        open={showSnoozeDialog}
+        onOpenChange={setShowSnoozeDialog}
+        onSnooze={handleSnoozeSubmit}
+        isLoading={isSnoozing}
+      />
     </div>
   );
 }

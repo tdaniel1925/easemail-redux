@@ -4,7 +4,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Reply, ReplyAll, Forward, Archive, Trash2, Star } from 'lucide-react';
+import { Reply, ReplyAll, Forward, Archive, Trash2, Star, Clock } from 'lucide-react';
 import type { Message } from '@/types/message';
 
 interface MessageActionsProps {
@@ -12,9 +12,10 @@ interface MessageActionsProps {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  onSnooze?: () => void;
 }
 
-export function MessageActions({ message, onReply, onReplyAll, onForward }: MessageActionsProps) {
+export function MessageActions({ message, onReply, onReplyAll, onForward, onSnooze }: MessageActionsProps) {
   // Phase 2: Reply/forward handlers
   const handleReply = () => {
     if (onReply) {
@@ -31,6 +32,13 @@ export function MessageActions({ message, onReply, onReplyAll, onForward }: Mess
   const handleForward = () => {
     if (onForward) {
       onForward();
+    }
+  };
+
+  // Phase 5: Snooze handler
+  const handleSnooze = () => {
+    if (onSnooze) {
+      onSnooze();
     }
   };
 
@@ -77,6 +85,16 @@ export function MessageActions({ message, onReply, onReplyAll, onForward }: Mess
       >
         <Forward className="h-4 w-4" />
         Forward
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSnooze}
+        className="gap-2"
+      >
+        <Clock className="h-4 w-4" />
+        Snooze
       </Button>
 
       <div className="ml-auto flex items-center gap-2">

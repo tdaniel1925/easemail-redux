@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/process-snoozed-emails",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/process-queued-sends",
+      "schedule": "* * * * *"
     }
   ]
 }

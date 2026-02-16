@@ -24,6 +24,7 @@ export type EventType =
   // Messages
   | 'message.received'
   | 'message.sent'
+  | 'email.send_canceled'
   | 'message.deleted'
   | 'message.read'
   | 'message.unread'

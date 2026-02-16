@@ -1877,6 +1877,94 @@ export type Database = {
           },
         ]
       }
+      queued_sends: {
+        Row: {
+          id: string
+          user_id: string
+          account_id: string
+          to_addresses: Json
+          cc_addresses: Json | null
+          bcc_addresses: Json | null
+          subject: string
+          body: string
+          body_html: string | null
+          attachments: Json | null
+          signature_id: string | null
+          in_reply_to: string | null
+          references: string | null
+          send_at: string
+          canceled: boolean
+          sent: boolean
+          error: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          account_id: string
+          to_addresses: Json
+          cc_addresses?: Json | null
+          bcc_addresses?: Json | null
+          subject: string
+          body: string
+          body_html?: string | null
+          attachments?: Json | null
+          signature_id?: string | null
+          in_reply_to?: string | null
+          references?: string | null
+          send_at?: string
+          canceled?: boolean
+          sent?: boolean
+          error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          account_id?: string
+          to_addresses?: Json
+          cc_addresses?: Json | null
+          bcc_addresses?: Json | null
+          subject?: string
+          body?: string
+          body_html?: string | null
+          attachments?: Json | null
+          signature_id?: string | null
+          in_reply_to?: string | null
+          references?: string | null
+          send_at?: string
+          canceled?: boolean
+          sent?: boolean
+          error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queued_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queued_sends_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "email_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queued_sends_signature_id_fkey"
+            columns: ["signature_id"]
+            isOneToOne: false
+            referencedRelation: "signatures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spam_reports: {
         Row: {
           archived_at: string | null
@@ -2562,6 +2650,7 @@ export type Database = {
         | "token.near_expiry"
         | "message.received"
         | "message.sent"
+        | "email.send_canceled"
         | "message.deleted"
         | "message.read"
         | "message.unread"
@@ -2814,6 +2903,7 @@ export const Constants = {
         "token.near_expiry",
         "message.received",
         "message.sent",
+        "email.send_canceled",
         "message.deleted",
         "message.read",
         "message.unread",
@@ -3059,6 +3149,10 @@ export type SmsMessageUpdate = Database['public']['Tables']['sms_messages']['Upd
 export type SnoozedEmail = Database['public']['Tables']['snoozed_emails']['Row']
 export type SnoozedEmailInsert = Database['public']['Tables']['snoozed_emails']['Insert']
 export type SnoozedEmailUpdate = Database['public']['Tables']['snoozed_emails']['Update']
+
+export type QueuedSend = Database['public']['Tables']['queued_sends']['Row']
+export type QueuedSendInsert = Database['public']['Tables']['queued_sends']['Insert']
+export type QueuedSendUpdate = Database['public']['Tables']['queued_sends']['Update']
 
 export type SpamReport = Database['public']['Tables']['spam_reports']['Row']
 export type SpamReportInsert = Database['public']['Tables']['spam_reports']['Insert']

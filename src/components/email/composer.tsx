@@ -27,8 +27,11 @@ import { useSignature } from '@/hooks/use-signature';
 import { useAttachments } from '@/hooks/use-attachments';
 import { AttachmentUploader } from '@/components/email/attachment-uploader';
 import { AttachmentList } from '@/components/email/attachment-list';
+import { useUndoSend } from '@/hooks/use-undo-send';
+import { showUndoSendToast } from '@/components/email/undo-send-toast';
 import type { Signature } from '@/types/database';
 import type { AttachmentMetadata } from '@/types/attachment';
+import type { Recipient } from '@/types/email';
 
 interface ComposerProps {
   onClose: () => void;
@@ -94,6 +97,9 @@ export function EmailComposer({
     accountId: sendingAccountId,
     autoSelectDefault: true,
   });
+
+  // Undo send functionality
+  const { queueSend, cancelSend } = useUndoSend();
 
   // Initialize sending account to currently selected account
   useEffect(() => {
@@ -191,37 +197,40 @@ export function EmailComposer({
       // Get completed attachments
       const completedAttachments = getCompletedAttachments();
 
-      const emailData: EmailData = {
-        email_account_id: sendingAccountId,
-        to: toEmails,
-        cc: ccEmails,
-        bcc: bccEmails,
+      // Convert email strings to Recipient objects
+      const toRecipients: Recipient[] = toEmails.map((email) => ({ email }));
+      const ccRecipients: Recipient[] = ccEmails.map((email) => ({ email }));
+      const bccRecipients: Recipient[] = bccEmails.map((email) => ({ email }));
+
+      // Queue the email for sending with undo window
+      const queued = await queueSend({
+        account_id: sendingAccountId,
+        to_addresses: toRecipients,
+        cc_addresses: ccRecipients.length > 0 ? ccRecipients : undefined,
+        bcc_addresses: bccRecipients.length > 0 ? bccRecipients : undefined,
         subject: subject.trim(),
+        body_text: editor.getText(),
         body_html: editor.getHTML(),
         attachments: completedAttachments.length > 0 ? completedAttachments : undefined,
-      };
+        signature_id: selectedSignature?.id,
+        delay_seconds: 5, // 5 second undo window
+      });
 
-      if (onSend) {
-        // Use custom onSend if provided
-        await onSend(emailData);
-      } else {
-        // Default: call sendEmail server action
-        const { sendEmail } = await import('@/lib/actions/message');
-        const result = await sendEmail({
-          email_account_id: emailData.email_account_id,
-          to: emailData.to,
-          cc: emailData.cc,
-          bcc: emailData.bcc,
-          subject: emailData.subject,
-          body_html: emailData.body_html,
-        });
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
+      if (!queued) {
+        throw new Error('Failed to queue email');
       }
 
-      toast.success('Email sent successfully');
+      // Show undo toast
+      showUndoSendToast(
+        queued.id,
+        queued.send_at,
+        async (queueId) => {
+          await cancelSend(queueId);
+        },
+        toast
+      );
+
+      // Close composer
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to send email');
