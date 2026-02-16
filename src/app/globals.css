@@ -135,3 +135,95 @@
     @apply bg-background text-foreground font-body antialiased;
   }
 }
+
+/* Phase 6, Task 126: Print Stylesheet */
+@media print {
+  /* Hide navigation, sidebars, and UI chrome */
+  nav,
+  aside,
+  header[role="banner"],
+  footer[role="contentinfo"],
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Print container adjustments */
+  .print-container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Clean page layout */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Content styling */
+  .print-content {
+    max-width: 100%;
+    color: black !important;
+  }
+
+  .print-content a {
+    color: black !important;
+    text-decoration: underline;
+  }
+
+  /* Show URLs after links */
+  .print-content a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+    color: #666;
+  }
+
+  /* Don't show URLs for anchor links */
+  .print-content a[href^="#"]:after,
+  .print-content a[href^="javascript:"]:after {
+    content: "";
+  }
+
+  /* Page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  pre, blockquote, table {
+    page-break-inside: avoid;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Headers and metadata */
+  .email-header,
+  .email-metadata {
+    border-bottom: 2px solid #000;
+    padding-bottom: 10pt;
+    margin-bottom: 20pt;
+  }
+
+  /* Remove shadows and borders */
+  * {
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+
+  /* Remove backgrounds except where needed for readability */
+  * {
+    background: transparent !important;
+  }
+
+  /* Ensure readable text */
+  p, li, td, th {
+    orphans: 3;
+    widows: 3;
+  }
+}

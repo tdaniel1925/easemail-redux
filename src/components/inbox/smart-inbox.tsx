@@ -84,6 +84,15 @@ export function SmartInbox({ userId }: SmartInboxProps) {
 
     const supabase = createClient();
 
+    // Phase 6, Task 135: Get blocked senders to exclude from inbox
+    const { data: blockedContacts } = await supabase
+      .from('contacts')
+      .select('email')
+      .eq('user_id', userId)
+      .eq('is_blocked', true);
+
+    const blockedEmails = blockedContacts?.map((c) => c.email) || [];
+
     // 1. Priority messages (from priority_senders)
     const { data: prioritySenders } = await supabase
       .from('priority_senders')
@@ -95,13 +104,20 @@ export function SmartInbox({ userId }: SmartInboxProps) {
 
     let priorityMessages: Message[] = [];
     if (priorityEmails.length > 0) {
-      const { data } = await supabase
+      let query = supabase
         .from('messages')
         .select('*')
         .eq('user_id', userId)
         .eq('email_account_id', selectedAccountId)
         .eq('folder_type', 'inbox')
-        .in('from_email', priorityEmails)
+        .in('from_email', priorityEmails);
+
+      // Exclude blocked senders (Phase 6, Task 135)
+      if (blockedEmails.length > 0) {
+        query = query.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+      }
+
+      const { data } = await query
         .order('message_date', { ascending: false })
         .limit(20);
 
@@ -109,58 +125,93 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     }
 
     // 2. People messages (category='people', not priority)
-    const { data: peopleMessages } = await supabase
+    let peopleQuery = supabase
       .from('messages')
       .select('*')
       .eq('user_id', userId)
       .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
       .contains('categories', ['people'])
-      .not('from_email', 'in', `(${priorityEmails.join(',')})`)
+      .not('from_email', 'in', `(${priorityEmails.join(',')})`);
+
+    // Exclude blocked senders (Phase 6, Task 135)
+    if (blockedEmails.length > 0) {
+      peopleQuery = peopleQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    const { data: peopleMessages } = await peopleQuery
       .order('message_date', { ascending: false })
       .limit(50);
 
     // 3. Newsletters (category='newsletter')
-    const { data: newsletterMessages } = await supabase
+    let newsletterQuery = supabase
       .from('messages')
       .select('*')
       .eq('user_id', userId)
       .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
-      .contains('categories', ['newsletter'])
+      .contains('categories', ['newsletter']);
+
+    // Exclude blocked senders (Phase 6, Task 135)
+    if (blockedEmails.length > 0) {
+      newsletterQuery = newsletterQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    const { data: newsletterMessages } = await newsletterQuery
       .order('message_date', { ascending: false })
       .limit(50);
 
     // 4. Notifications (category='notification')
-    const { data: notificationMessages } = await supabase
+    let notificationQuery = supabase
       .from('messages')
       .select('*')
       .eq('user_id', userId)
       .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
-      .contains('categories', ['notification'])
+      .contains('categories', ['notification']);
+
+    // Exclude blocked senders (Phase 6, Task 135)
+    if (blockedEmails.length > 0) {
+      notificationQuery = notificationQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    const { data: notificationMessages } = await notificationQuery
       .order('message_date', { ascending: false })
       .limit(50);
 
     // 5. Promotions (category='promotion')
-    const { data: promotionMessages } = await supabase
+    let promotionQuery = supabase
       .from('messages')
       .select('*')
       .eq('user_id', userId)
       .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
-      .contains('categories', ['promotion'])
+      .contains('categories', ['promotion']);
+
+    // Exclude blocked senders (Phase 6, Task 135)
+    if (blockedEmails.length > 0) {
+      promotionQuery = promotionQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    const { data: promotionMessages } = await promotionQuery
       .order('message_date', { ascending: false })
       .limit(50);
 
     // 6. Uncategorized messages (categories is empty array) - temporary fallback
-    const { data: uncategorizedMessages, error: uncategorizedError } = await supabase
+    let uncategorizedQuery = supabase
       .from('messages')
       .select('*')
       .eq('user_id', userId)
       .eq('email_account_id', selectedAccountId)
       .eq('folder_type', 'inbox')
-      .eq('categories', []) // Empty array
+      .eq('categories', []); // Empty array
+
+    // Exclude blocked senders (Phase 6, Task 135)
+    if (blockedEmails.length > 0) {
+      uncategorizedQuery = uncategorizedQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    const { data: uncategorizedMessages, error: uncategorizedError } = await uncategorizedQuery
       .order('message_date', { ascending: false })
       .limit(100);
 

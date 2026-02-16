@@ -1,5 +1,6 @@
 // MessageView component - Full email message display
 // Phase 2: Reply/forward integrated
+// Phase 6: Print and block sender integrated (Tasks 132, 133)
 
 'use client';
 
@@ -10,6 +11,7 @@ import { MessageActions } from './message-actions';
 import { ReplyComposer } from '@/components/email/reply-composer';
 import { SnoozeDialog } from './snooze-dialog';
 import { useSnooze } from '@/hooks/use-snooze';
+import { useBlockSender } from '@/hooks/use-block-sender';
 import { useRouter } from 'next/navigation';
 import type { Message } from '@/types/message';
 
@@ -21,6 +23,7 @@ export function MessageView({ message }: MessageViewProps) {
   const [replyMode, setReplyMode] = useState<'reply' | 'replyAll' | 'forward' | null>(null);
   const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
   const { snoozeEmail, isSnoozing } = useSnooze();
+  const { blockSender } = useBlockSender();
   const router = useRouter();
 
   const handleReply = () => {
@@ -53,6 +56,22 @@ export function MessageView({ message }: MessageViewProps) {
     }
   };
 
+  // Phase 6, Task 132: Print handler
+  const handlePrint = () => {
+    // Open print view in new window
+    const printUrl = `/app/print/${message.id}`;
+    window.open(printUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // Phase 6, Task 133: Block sender handler
+  const handleBlockSender = async () => {
+    const success = await blockSender(message.from_email);
+    if (success) {
+      // Refresh to hide emails from blocked sender
+      router.refresh();
+    }
+  };
+
   const handleCloseComposer = () => {
     setReplyMode(null);
   };
@@ -67,6 +86,8 @@ export function MessageView({ message }: MessageViewProps) {
           onReplyAll={handleReplyAll}
           onForward={handleForward}
           onSnooze={handleSnooze}
+          onPrint={handlePrint}
+          onBlockSender={handleBlockSender}
         />
       </div>
 

@@ -1,17 +1,22 @@
 // MessageBody component - renders sanitized HTML email body
 // Phase 1, Task 12
 // Phase 4, Task 77: Added attachment download support
+// Phase 6, Task 129: Added unsubscribe button detection and display
 
 'use client';
 
 import DOMPurify from 'isomorphic-dompurify';
-import { Download, File, FileText, Image, FileArchive } from 'lucide-react';
+import { Download, File, FileText, Image, FileArchive, MailX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { detectUnsubscribe } from '@/lib/utils/email-parse';
+import { toast } from 'sonner';
 import type { Message } from '@/types/message';
 import type { AttachmentMetadata } from '@/types/attachment';
 
 interface MessageBodyProps {
   message: Message;
+  onUnsubscribe?: (url: string, email: string | null) => void;
 }
 
 /**
@@ -47,7 +52,9 @@ async function handleDownloadAttachment(attachment: AttachmentMetadata) {
   }
 }
 
-export function MessageBody({ message }: MessageBodyProps) {
+export function MessageBody({ message, onUnsubscribe }: MessageBodyProps) {
+  const [unsubscribing, setUnsubscribing] = useState(false);
+
   // Sanitize HTML to prevent XSS attacks
   const sanitizedHtml = message.body_html
     ? DOMPurify.sanitize(message.body_html, {
@@ -71,8 +78,84 @@ export function MessageBody({ message }: MessageBodyProps) {
       : []
     : [];
 
+  // Detect unsubscribe info (Phase 6, Task 129)
+  // Note: We would need email headers to fully implement this
+  // For now, we'll detect from body HTML only
+  const unsubscribeInfo = detectUnsubscribe({}, message.body_html);
+
+  // Handle unsubscribe (Task 134)
+  const handleUnsubscribe = async () => {
+    if (!unsubscribeInfo.unsubscribeUrl && !unsubscribeInfo.unsubscribeEmail) {
+      return;
+    }
+
+    setUnsubscribing(true);
+
+    try {
+      if (unsubscribeInfo.unsubscribeUrl) {
+        // Open unsubscribe URL in new tab
+        window.open(unsubscribeInfo.unsubscribeUrl, '_blank', 'noopener,noreferrer');
+        toast.success('Opened unsubscribe page', {
+          description: 'Please follow the instructions to unsubscribe',
+        });
+
+        // Call callback if provided
+        if (onUnsubscribe) {
+          onUnsubscribe(unsubscribeInfo.unsubscribeUrl, unsubscribeInfo.unsubscribeEmail);
+        }
+      } else if (unsubscribeInfo.unsubscribeEmail) {
+        // Open mailto link
+        window.location.href = `mailto:${unsubscribeInfo.unsubscribeEmail}?subject=Unsubscribe`;
+        toast.success('Opening email client', {
+          description: 'Send the email to complete unsubscribe',
+        });
+
+        // Call callback if provided
+        if (onUnsubscribe) {
+          onUnsubscribe('', unsubscribeInfo.unsubscribeEmail);
+        }
+      }
+    } catch (error) {
+      console.error('Error unsubscribing:', error);
+      toast.error('Failed to unsubscribe');
+    } finally {
+      setUnsubscribing(false);
+    }
+  };
+
   return (
     <div className="py-6">
+      {/* Unsubscribe Banner (Phase 6, Task 129) */}
+      {unsubscribeInfo.hasUnsubscribe && (
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+          <div className="flex items-center gap-3">
+            <MailX className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                This email contains an unsubscribe link
+              </p>
+              <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                {unsubscribeInfo.unsubscribeMethod === 'http'
+                  ? 'Click to visit the unsubscribe page'
+                  : unsubscribeInfo.unsubscribeMethod === 'mailto'
+                  ? 'Click to send an unsubscribe email'
+                  : 'Click to unsubscribe from this sender'}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleUnsubscribe}
+              disabled={unsubscribing}
+              className="flex-shrink-0 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-800/50"
+            >
+              Unsubscribe
+            </Button>
+          </div>
+        </div>
+      )}
+
       {sanitizedHtml ? (
         <div
           className="prose prose-sm max-w-none dark:prose-invert"

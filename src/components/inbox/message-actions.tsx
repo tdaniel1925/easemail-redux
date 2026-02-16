@@ -1,10 +1,11 @@
 // MessageActions component - reply, archive, trash, etc.
 // Phase 2: Reply/Forward handlers implemented
+// Phase 6: Print and block sender buttons added (Tasks 125, 127)
 
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Reply, ReplyAll, Forward, Archive, Trash2, Star, Clock } from 'lucide-react';
+import { Reply, ReplyAll, Forward, Archive, Trash2, Star, Clock, Printer, Ban } from 'lucide-react';
 import type { Message } from '@/types/message';
 
 interface MessageActionsProps {
@@ -13,9 +14,11 @@ interface MessageActionsProps {
   onReplyAll?: () => void;
   onForward?: () => void;
   onSnooze?: () => void;
+  onPrint?: () => void;
+  onBlockSender?: () => void;
 }
 
-export function MessageActions({ message, onReply, onReplyAll, onForward, onSnooze }: MessageActionsProps) {
+export function MessageActions({ message, onReply, onReplyAll, onForward, onSnooze, onPrint, onBlockSender }: MessageActionsProps) {
   // Phase 2: Reply/forward handlers
   const handleReply = () => {
     if (onReply) {
@@ -39,6 +42,20 @@ export function MessageActions({ message, onReply, onReplyAll, onForward, onSnoo
   const handleSnooze = () => {
     if (onSnooze) {
       onSnooze();
+    }
+  };
+
+  // Phase 6: Print handler (Task 125, Task 132)
+  const handlePrint = () => {
+    if (onPrint) {
+      onPrint();
+    }
+  };
+
+  // Phase 6: Block sender handler (Task 127, Task 133)
+  const handleBlockSender = () => {
+    if (onBlockSender) {
+      onBlockSender();
     }
   };
 
@@ -95,6 +112,28 @@ export function MessageActions({ message, onReply, onReplyAll, onForward, onSnoo
       >
         <Clock className="h-4 w-4" />
         Snooze
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handlePrint}
+        className="gap-2"
+        title="Print email"
+      >
+        <Printer className="h-4 w-4" />
+        Print
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleBlockSender}
+        className="gap-2"
+        title="Block sender"
+      >
+        <Ban className="h-4 w-4" />
+        Block
       </Button>
 
       <div className="ml-auto flex items-center gap-2">
