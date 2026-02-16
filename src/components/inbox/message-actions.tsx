@@ -1,11 +1,13 @@
 // MessageActions component - reply, archive, trash, etc.
 // Phase 2: Reply/Forward handlers implemented
 // Phase 6: Print and block sender buttons added (Tasks 125, 127)
+// Phase 6: AI extract event button added (Task 123)
 
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { Reply, ReplyAll, Forward, Archive, Trash2, Star, Clock, Printer, Ban } from 'lucide-react';
+import { AIExtractEventButton } from '@/components/ai/ai-extract-event-button';
 import type { Message } from '@/types/message';
 
 interface MessageActionsProps {
@@ -135,6 +137,13 @@ export function MessageActions({ message, onReply, onReplyAll, onForward, onSnoo
         <Ban className="h-4 w-4" />
         Block
       </Button>
+
+      {/* Phase 6, Task 123: AI Extract Event */}
+      <AIExtractEventButton
+        emailBody={message.body_html || message.body_text || ''}
+        emailSubject={message.subject || ''}
+        fromEmail={message.from_email}
+      />
 
       <div className="ml-auto flex items-center gap-2">
         <Button

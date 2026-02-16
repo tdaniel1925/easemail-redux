@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,11 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { EventForm } from '@/components/calendar/event-form';
 import { CalendarPlus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAccount } from '@/hooks/use-account';
+import type { CalendarEvent, CalendarMetadata } from '@/lib/providers/types';
 
 interface EventDetails {
   title: string | null;
@@ -38,9 +38,41 @@ export function AIExtractEventButton({
   fromEmail,
   onEventCreated,
 }: AIExtractEventButtonProps) {
+  const { selectedAccountId } = useAccount();
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [eventDetails, setEventDetails] = useState<EventDetails | null>(null);
+  const [calendars, setCalendars] = useState<CalendarMetadata[]>([]);
+  const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
+
+  // Fetch calendars when account is selected
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetchCalendars();
+    }
+  }, [selectedAccountId]);
+
+  const fetchCalendars = async () => {
+    if (!selectedAccountId) return;
+
+    try {
+      const response = await fetch(`/api/calendars?accountId=${selectedAccountId}`);
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setCalendars(data.calendars || []);
+
+      // Auto-select primary calendar
+      const primary = data.calendars?.find((c: CalendarMetadata) => c.is_primary);
+      if (primary) {
+        setSelectedCalendarId(primary.id);
+      } else if (data.calendars && data.calendars.length > 0) {
+        setSelectedCalendarId(data.calendars[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching calendars:', error);
+    }
+  };
 
   const handleExtract = async () => {
     setLoading(true);
@@ -73,12 +105,59 @@ export function AIExtractEventButton({
     }
   };
 
-  const handleCreateEvent = async () => {
-    // TODO: Integrate with calendar creation API
-    // For now, just show success
-    toast.success('Event extraction complete. Calendar integration coming soon!');
+  const handleEventCreated = (event: CalendarEvent) => {
+    toast.success('Calendar event created successfully!');
     setDialogOpen(false);
+    setEventDetails(null);
     onEventCreated?.();
+  };
+
+  // Transform extracted event details to EventForm initialData format
+  const getInitialData = (): Partial<{
+    title: string;
+    description: string;
+    location: string;
+    start_time: string;
+    end_time: string;
+    all_day: boolean;
+    timezone: string;
+    attendees: string;
+    is_online_meeting: boolean;
+  }> | undefined => {
+    if (!eventDetails) return undefined;
+
+    // Combine date and time into ISO datetime strings
+    const combineDateTime = (date: string | null, time: string | null): string => {
+      if (!date) return new Date().toISOString();
+
+      if (time) {
+        // Combine date (YYYY-MM-DD) with time (HH:MM)
+        return new Date(`${date}T${time}:00`).toISOString();
+      }
+
+      // Default to 9:00 AM if no time provided
+      return new Date(`${date}T09:00:00`).toISOString();
+    };
+
+    const start_time = combineDateTime(eventDetails.date, eventDetails.start_time);
+    const end_time = combineDateTime(
+      eventDetails.date,
+      eventDetails.end_time || (eventDetails.start_time ?
+        `${parseInt(eventDetails.start_time.split(':')[0]) + 1}:${eventDetails.start_time.split(':')[1]}` :
+        null)
+    );
+
+    return {
+      title: eventDetails.title || emailSubject,
+      description: eventDetails.description || '',
+      location: eventDetails.location || '',
+      start_time,
+      end_time,
+      attendees: eventDetails.attendees?.map(a => a.email).join(', ') || '',
+      timezone: 'UTC',
+      all_day: false,
+      is_online_meeting: false,
+    };
   };
 
   return (
@@ -99,114 +178,37 @@ export function AIExtractEventButton({
         <span className="ml-2">Create Event</span>
       </Button>
 
-      {eventDetails && (
+      {eventDetails && selectedAccountId && selectedCalendarId && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Calendar Event</DialogTitle>
               <DialogDescription>
-                Review and edit the extracted event details before creating
+                Review and edit the AI-extracted event details
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Event Title</Label>
-                <Input
-                  id="title"
-                  value={eventDetails.title || ''}
-                  onChange={(e) =>
-                    setEventDetails({ ...eventDetails, title: e.target.value })
-                  }
-                  placeholder="Meeting title"
-                />
-              </div>
+            <EventForm
+              accountId={selectedAccountId}
+              calendarId={selectedCalendarId}
+              initialData={getInitialData()}
+              onSuccess={handleEventCreated}
+              onCancel={() => setDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={eventDetails.date || ''}
-                    onChange={(e) =>
-                      setEventDetails({ ...eventDetails, date: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={eventDetails.location || ''}
-                    onChange={(e) =>
-                      setEventDetails({ ...eventDetails, location: e.target.value })
-                    }
-                    placeholder="Meeting location or URL"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_time">Start Time</Label>
-                  <Input
-                    id="start_time"
-                    type="time"
-                    value={eventDetails.start_time || ''}
-                    onChange={(e) =>
-                      setEventDetails({ ...eventDetails, start_time: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_time">End Time</Label>
-                  <Input
-                    id="end_time"
-                    type="time"
-                    value={eventDetails.end_time || ''}
-                    onChange={(e) =>
-                      setEventDetails({ ...eventDetails, end_time: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={eventDetails.description || ''}
-                  onChange={(e) =>
-                    setEventDetails({ ...eventDetails, description: e.target.value })
-                  }
-                  placeholder="Event description"
-                  rows={3}
-                />
-              </div>
-
-              {eventDetails.attendees && eventDetails.attendees.length > 0 && (
-                <div>
-                  <Label>Attendees</Label>
-                  <div className="mt-2 space-y-1">
-                    {eventDetails.attendees.map((attendee, idx) => (
-                      <div key={idx} className="text-sm">
-                        {attendee.name} ({attendee.email})
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button onClick={handleCreateEvent} className="flex-1">
-                  Create Event
-                </Button>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
+      {eventDetails && (!selectedAccountId || !selectedCalendarId) && (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Calendar Not Available</DialogTitle>
+              <DialogDescription>
+                Please connect an email account and ensure you have calendar access to create events.
+              </DialogDescription>
+            </DialogHeader>
+            <Button onClick={() => setDialogOpen(false)}>Close</Button>
           </DialogContent>
         </Dialog>
       )}

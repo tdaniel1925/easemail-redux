@@ -576,7 +576,7 @@ None currently. Ready to proceed with Phase 0.
 
 ## PHASE 6: CALENDAR + PRINT + BLOCK + UNSUBSCRIBE ✅ COMPLETE
 
-### Tasks (25 total):
+### Tasks (25 total) - ALL COMPLETE ✅:
 1. ✅ Implement createEvent() in Google provider (Task 111) → Already existed, verified
 2. ✅ Implement updateEvent() in Google provider (Task 112) → Already existed, verified
 3. ✅ Implement createEvent() in Microsoft provider (Task 113) → Already existed, verified
@@ -589,7 +589,7 @@ None currently. Ready to proceed with Phase 0.
 10. ✅ Create CalendarView page (Task 120) → src/app/(app)/app/calendar/page.tsx + calendar-content.tsx
 11. ✅ Create EventForm component (Task 121) → src/components/calendar/event-form.tsx
 12. ✅ Create EventList component (Task 122) → src/components/calendar/event-list.tsx
-13. ⏭️ Wire AI extract → EventForm (Task 123) → SKIPPED (AI extract exists, EventForm has initialData support ready)
+13. ✅ Wire AI extract → EventForm (Task 123) → Modified src/components/ai/ai-extract-event-button.tsx + src/components/inbox/message-actions.tsx
 14. ✅ Create PrintView page (Task 124) → src/app/(app)/app/print/[messageId]/page.tsx
 15. ✅ Add print button to MessageActions (Task 125) → Modified src/components/inbox/message-actions.tsx
 16. ✅ Add print stylesheet (Task 126) → Modified src/app/globals.css
@@ -627,10 +627,11 @@ None currently. Ready to proceed with Phase 0.
 - src/app/(app)/app/print/[messageId]/page.tsx
 
 ### Files Modified:
-- src/components/inbox/message-actions.tsx (added print and block sender buttons with handlers)
+- src/components/inbox/message-actions.tsx (added print, block sender, and AI event extract buttons)
 - src/components/inbox/message-body.tsx (added unsubscribe detection banner and handler)
 - src/components/inbox/message-view.tsx (added print and block sender handlers)
 - src/components/inbox/smart-inbox.tsx (added blocked sender filtering to all inbox queries)
+- src/components/ai/ai-extract-event-button.tsx (integrated EventForm for event creation from AI extraction)
 - src/app/globals.css (added @media print styles for clean printing)
 
 ### Actual Completion Time: ~3 hours
@@ -647,10 +648,10 @@ None currently. Ready to proceed with Phase 0.
 - ⚠️ Print view auto-triggers print dialog
   - **Note**: Uses window.print() in script tag, works in all modern browsers
   - **Status**: Opens in new tab, auto-triggers print dialog after 500ms delay
-- ⚠️ AI extract → EventForm wiring (Task 123) not fully implemented
-  - **Status**: EventForm component has initialData prop ready for AI-extracted data
-  - **Reason**: AI extract feature exists from previous phase, needs integration point
-  - **Future Enhancement**: Add "Create Event" button to AI extract results
+- ✅ AI extract → EventForm fully integrated
+  - **Status**: "Create Event" button now appears in MessageActions
+  - **Functionality**: Extracts event details from email body using AI, pre-fills EventForm
+  - **Features**: Automatically fetches user's calendars, combines date/time fields, transforms AI data to form format
 
 ### Handoff Notes for Phase 7:
 - ✅ Calendar fully working (create, update, list view, integrates with Google Calendar and Outlook Calendar)
