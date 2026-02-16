@@ -49,12 +49,31 @@ export async function GET(req: NextRequest) {
 
   // Create SSE stream
   const encoder = new TextEncoder();
+  let isClosed = false; // Track controller state to prevent double-close
+
   const stream = new ReadableStream({
     async start(controller) {
       // Helper to send SSE message
       const sendEvent = (event: string, data: unknown) => {
-        const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-        controller.enqueue(encoder.encode(message));
+        if (isClosed) return; // Don't send if controller is closed
+        try {
+          const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+          controller.enqueue(encoder.encode(message));
+        } catch (error) {
+          // Controller already closed
+          isClosed = true;
+        }
+      };
+
+      // Helper to safely close controller
+      const safeClose = () => {
+        if (isClosed) return;
+        isClosed = true;
+        try {
+          controller.close();
+        } catch (error) {
+          // Controller already closed, ignore
+        }
       };
 
       // Send connection established event
@@ -108,7 +127,7 @@ export async function GET(req: NextRequest) {
           } else if (status === 'CHANNEL_ERROR') {
             console.error('[SSE Stream] Realtime subscription error for user:', user.id);
             clearInterval(heartbeatInterval);
-            controller.close();
+            safeClose();
           }
         });
 
@@ -135,7 +154,7 @@ export async function GET(req: NextRequest) {
         //   .delete()
         //   .eq('connection_id', connectionId);
 
-        controller.close();
+        safeClose();
       });
     },
   });
