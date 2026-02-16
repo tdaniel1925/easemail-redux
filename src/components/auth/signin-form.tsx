@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import * as z from 'zod';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -34,10 +34,14 @@ export function SignInForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     watch,
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
+    defaultValues: {
+      rememberMe: false,
+    },
   });
 
   const email = watch('email');
@@ -165,10 +169,17 @@ export function SignInForm() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Checkbox
-            id="rememberMe"
-            {...register('rememberMe')}
-            disabled={isLoading}
+          <Controller
+            name="rememberMe"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                id="rememberMe"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                disabled={isLoading}
+              />
+            )}
           />
           <Label
             htmlFor="rememberMe"
