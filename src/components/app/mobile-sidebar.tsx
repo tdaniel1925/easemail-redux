@@ -37,7 +37,6 @@ export function MobileSidebar({ userEmail }: MobileSidebarProps) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className="fixed inset-y-0 left-0 h-full w-64 max-w-none p-0 rounded-none border-r data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left"
-          showCloseButton={false}
         >
           <div className="flex h-full flex-col p-6">
             <div className="mb-8 flex items-center justify-between">
