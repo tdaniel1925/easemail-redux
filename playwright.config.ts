@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isProductionTest = process.env.PLAYWRIGHT_TEST_BASE_URL?.includes('vercel.app') ||
+                         process.env.PLAYWRIGHT_TEST_BASE_URL?.includes('https://');
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -19,10 +22,13 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  // Only start webServer for local testing, not for production
+  ...(isProductionTest ? {} : {
+    webServer: {
+      command: 'npm run dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+  }),
 });

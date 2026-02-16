@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
-import { SmartInbox } from '@/components/inbox/smart-inbox';
+import { InboxTabsView } from '@/components/inbox/inbox-tabs-view';
 import { MessageRowSkeleton } from '@/components/inbox/message-row-skeleton';
 import { RefreshButton } from '@/components/inbox/refresh-button';
 import { Card } from '@/components/ui/card';
@@ -96,7 +96,7 @@ export function InboxContent({ userId }: InboxContentProps) {
           <MessageRowSkeleton count={8} />
         </div>
       ) : hasMessages ? (
-        <SmartInbox userId={userId} />
+        <InboxTabsView userId={userId} />
       ) : (
         <Card className="p-6">
           <EmptyState

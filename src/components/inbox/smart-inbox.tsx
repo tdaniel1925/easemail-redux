@@ -6,13 +6,14 @@ import { MessageRowSkeleton } from './message-row-skeleton';
 import { GatekeeperCard } from './gatekeeper-card';
 import { createClient } from '@/lib/supabase/client';
 import type { Message } from '@/types/message';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAccount } from '@/hooks/use-account';
 
 interface SmartInboxProps {
   userId: string;
+  searchQuery?: string;
 }
 
 interface MessageThread {
@@ -30,7 +31,7 @@ interface MessageSection {
   count: number;
 }
 
-export function SmartInbox({ userId }: SmartInboxProps) {
+export function SmartInbox({ userId, searchQuery }: SmartInboxProps) {
   const { selectedAccountId } = useAccount();
   const [sections, setSections] = useState<MessageSection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +113,16 @@ export function SmartInbox({ userId }: SmartInboxProps) {
         query = query.not('from_email', 'in', `(${blockedEmails.join(',')})`);
       }
 
+      // Apply search filter if searchQuery exists
+      if (searchQuery) {
+        query = query.or(
+          `from_email.ilike.%${searchQuery}%,` +
+          `from_name.ilike.%${searchQuery}%,` +
+          `subject.ilike.%${searchQuery}%,` +
+          `body_text.ilike.%${searchQuery}%`
+        );
+      }
+
       const { data } = await query
         .order('message_date', { ascending: false })
         .limit(20);
@@ -134,6 +145,16 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       peopleQuery = peopleQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
     }
 
+    // Apply search filter if searchQuery exists
+    if (searchQuery) {
+      peopleQuery = peopleQuery.or(
+        `from_email.ilike.%${searchQuery}%,` +
+        `from_name.ilike.%${searchQuery}%,` +
+        `subject.ilike.%${searchQuery}%,` +
+        `body_text.ilike.%${searchQuery}%`
+      );
+    }
+
     const { data: peopleMessages } = await peopleQuery
       .order('message_date', { ascending: false })
       .limit(50);
@@ -150,6 +171,16 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     // Exclude blocked senders (Phase 6, Task 135)
     if (blockedEmails.length > 0) {
       newsletterQuery = newsletterQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    // Apply search filter if searchQuery exists
+    if (searchQuery) {
+      newsletterQuery = newsletterQuery.or(
+        `from_email.ilike.%${searchQuery}%,` +
+        `from_name.ilike.%${searchQuery}%,` +
+        `subject.ilike.%${searchQuery}%,` +
+        `body_text.ilike.%${searchQuery}%`
+      );
     }
 
     const { data: newsletterMessages } = await newsletterQuery
@@ -170,6 +201,16 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       notificationQuery = notificationQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
     }
 
+    // Apply search filter if searchQuery exists
+    if (searchQuery) {
+      notificationQuery = notificationQuery.or(
+        `from_email.ilike.%${searchQuery}%,` +
+        `from_name.ilike.%${searchQuery}%,` +
+        `subject.ilike.%${searchQuery}%,` +
+        `body_text.ilike.%${searchQuery}%`
+      );
+    }
+
     const { data: notificationMessages } = await notificationQuery
       .order('message_date', { ascending: false })
       .limit(50);
@@ -188,6 +229,16 @@ export function SmartInbox({ userId }: SmartInboxProps) {
       promotionQuery = promotionQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
     }
 
+    // Apply search filter if searchQuery exists
+    if (searchQuery) {
+      promotionQuery = promotionQuery.or(
+        `from_email.ilike.%${searchQuery}%,` +
+        `from_name.ilike.%${searchQuery}%,` +
+        `subject.ilike.%${searchQuery}%,` +
+        `body_text.ilike.%${searchQuery}%`
+      );
+    }
+
     const { data: promotionMessages } = await promotionQuery
       .order('message_date', { ascending: false })
       .limit(50);
@@ -204,6 +255,16 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     // Exclude blocked senders (Phase 6, Task 135)
     if (blockedEmails.length > 0) {
       uncategorizedQuery = uncategorizedQuery.not('from_email', 'in', `(${blockedEmails.join(',')})`);
+    }
+
+    // Apply search filter if searchQuery exists
+    if (searchQuery) {
+      uncategorizedQuery = uncategorizedQuery.or(
+        `from_email.ilike.%${searchQuery}%,` +
+        `from_name.ilike.%${searchQuery}%,` +
+        `subject.ilike.%${searchQuery}%,` +
+        `body_text.ilike.%${searchQuery}%`
+      );
     }
 
     const { data: uncategorizedMessages, error: uncategorizedError } = await uncategorizedQuery
@@ -263,7 +324,7 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     setSections(allSections);
 
     setLoading(false);
-  }, [userId, selectedAccountId, groupMessagesIntoThreads]);
+  }, [userId, selectedAccountId, searchQuery, groupMessagesIntoThreads]);
 
   useEffect(() => {
     if (selectedAccountId) {
@@ -285,6 +346,25 @@ export function SmartInbox({ userId }: SmartInboxProps) {
     return (
       <div className="flex flex-col gap-2">
         <MessageRowSkeleton count={8} />
+      </div>
+    );
+  }
+
+  // Check if search returned no results
+  const hasAnyMessages = sections.some(section => section.count > 0);
+
+  if (!hasAnyMessages && searchQuery) {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="rounded-lg border bg-card p-6 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <Inbox className="h-12 w-12 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">No messages found</h3>
+            <p className="text-sm text-muted-foreground">
+              No messages match &ldquo;{searchQuery}&rdquo;. Try a different search term or clear your search.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

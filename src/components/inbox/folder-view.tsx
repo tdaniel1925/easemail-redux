@@ -14,6 +14,7 @@ interface FolderViewProps {
   userId: string;
   folderType?: 'inbox' | 'sent' | 'drafts' | 'archive' | 'trash' | 'spam' | 'custom';
   folderId?: string; // provider_folder_id for custom folders
+  searchQuery?: string;
 }
 
 interface MessageThread {
@@ -23,7 +24,7 @@ interface MessageThread {
   count: number;
 }
 
-export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
+export function FolderView({ userId, folderType, folderId, searchQuery }: FolderViewProps) {
   const { selectedAccountId } = useAccount();
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,6 +85,16 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
       query = query.eq('folder_type', folderType);
     }
 
+    // Apply search filter if searchQuery exists
+    if (searchQuery) {
+      query = query.or(
+        `from_email.ilike.%${searchQuery}%,` +
+        `from_name.ilike.%${searchQuery}%,` +
+        `subject.ilike.%${searchQuery}%,` +
+        `body_text.ilike.%${searchQuery}%`
+      );
+    }
+
     const { data: messages } = await query
       .order('message_date', { ascending: false })
       .limit(200);
@@ -93,7 +104,7 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
     }
 
     setLoading(false);
-  }, [userId, selectedAccountId, folderId, folderType, groupMessagesIntoThreads]);
+  }, [userId, selectedAccountId, folderId, folderType, searchQuery, groupMessagesIntoThreads]);
 
   useEffect(() => {
     if (selectedAccountId) {
@@ -106,6 +117,18 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
       <div className="flex flex-col gap-2">
         <MessageRowSkeleton count={8} />
       </div>
+    );
+  }
+
+  if (threads.length === 0 && searchQuery) {
+    return (
+      <Card className="p-6">
+        <EmptyState
+          icon={<Inbox className="h-12 w-12" />}
+          title="No messages found"
+          description={`No messages match \u201C${searchQuery}\u201D. Try a different search term or clear your search.`}
+        />
+      </Card>
     );
   }
 
