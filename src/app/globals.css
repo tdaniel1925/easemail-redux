@@ -140,6 +140,14 @@
     pointer-events: none !important;
     display: none !important;
   }
+
+  /* Additional safety: ensure dialog overlays don't block when not visible */
+  [data-radix-dialog-overlay][data-state="closed"],
+  [data-radix-alert-dialog-overlay][data-state="closed"] {
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
 }
 
 /* Phase 6, Task 126: Print Stylesheet */
