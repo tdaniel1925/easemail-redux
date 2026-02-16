@@ -12,6 +12,7 @@ interface AuthResult {
 }
 
 export async function signIn(email: string, password: string, rememberMe?: boolean): Promise<AuthResult> {
+  console.error('[DEBUG] signIn called with email:', email);
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -20,6 +21,7 @@ export async function signIn(email: string, password: string, rememberMe?: boole
   });
 
   if (error) {
+    console.error('[DEBUG] signIn error:', error.message);
     // Track failed login
     if ((data as any)?.user?.id) {
       await trackLogin((data as any).user.id, false, undefined, undefined, error.message);
@@ -29,43 +31,52 @@ export async function signIn(email: string, password: string, rememberMe?: boole
   }
 
   if (!data.user) {
+    console.error('[DEBUG] signIn failed: no user in response');
     return { error: 'Failed to sign in' };
   }
 
-  // Update user's remember_me preference and set session expiry
-  if (rememberMe !== undefined) {
-    const now = new Date();
-    const expiresAt = rememberMe
-      ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000) // 90 days
-      : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  console.error('[DEBUG] signIn successful, user id:', data.user.id);
 
-    await supabase
-      .from('users')
-      .update({
-        remember_me: rememberMe,
-        session_expires_at: expiresAt.toISOString(),
-      })
-      .eq('id', data.user.id);
+  try {
+    // Update user's remember_me preference and set session expiry
+    if (rememberMe !== undefined) {
+      const now = new Date();
+      const expiresAt = rememberMe
+        ? new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000) // 90 days
+        : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      await supabase
+        .from('users')
+        .update({
+          remember_me: rememberMe,
+          session_expires_at: expiresAt.toISOString(),
+        })
+        .eq('id', data.user.id);
+    }
+
+    // Track successful login
+    await trackLogin((data as any).user.id, true);
+
+    // Log auth event
+    await logAuthEvent(data.user.id, 'login');
+
+    // Emit event
+    await emitEvent({
+      eventType: 'user.login',
+      entityType: 'user',
+      entityId: data.user.id,
+      actorId: data.user.id,
+      payload: {
+        email: data.user.email,
+      },
+      metadata: { source: 'ui' },
+    });
+  } catch (postLoginError) {
+    console.error('[DEBUG] Post-login tracking error (non-fatal):', postLoginError);
+    // Don't fail the login if tracking fails
   }
 
-  // Track successful login
-  await trackLogin((data as any).user.id, true);
-
-  // Log auth event
-  await logAuthEvent(data.user.id, 'login');
-
-  // Emit event
-  await emitEvent({
-    eventType: 'user.login',
-    entityType: 'user',
-    entityId: data.user.id,
-    actorId: data.user.id,
-    payload: {
-      email: data.user.email,
-    },
-    metadata: { source: 'ui' },
-  });
-
+  console.error('[DEBUG] signIn returning success');
   return { success: true };
 }
 

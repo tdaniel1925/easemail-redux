@@ -41,20 +41,26 @@ export function SignInForm() {
   const email = watch('email');
 
   const onSubmit = async (data: SignInFormData) => {
+    console.log('[DEBUG CLIENT] Form submitted with email:', data.email);
     setIsLoading(true);
 
     try {
+      console.log('[DEBUG CLIENT] Calling signIn action...');
       const result = await signIn(data.email, data.password, data.rememberMe);
+      console.log('[DEBUG CLIENT] signIn result:', result);
 
       if (result.error) {
+        console.error('[DEBUG CLIENT] Login error:', result.error);
         toast.error(result.error);
         return;
       }
 
+      console.log('[DEBUG CLIENT] Login successful, redirecting to:', redirect);
       toast.success('Signed in successfully');
       router.push(redirect);
       router.refresh();
     } catch (error) {
+      console.error('[DEBUG CLIENT] Unexpected error:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
