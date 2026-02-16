@@ -47,7 +47,7 @@ export function MessageRow({ message, isPriority, threadCount }: MessageRowProps
     <button
       onClick={handleClick}
       className={cn(
-        'group flex w-full items-start gap-3 rounded-lg border-l-4 px-4 py-3 text-left transition-colors hover:bg-accent',
+        'group flex w-full items-start gap-3 rounded-lg border-l-4 px-4 py-3 min-h-[60px] text-left transition-colors hover:bg-accent',
         isPriority
           ? 'border-l-[#FF7F50]' // coral accent for priority
           : 'border-l-transparent',

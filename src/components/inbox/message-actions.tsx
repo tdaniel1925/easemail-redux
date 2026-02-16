@@ -75,67 +75,73 @@ export function MessageActions({ message, onReply, onReplyAll, onForward, onSnoo
   };
 
   return (
-    <div className="flex items-center gap-2 border-b pb-4">
+    <div className="flex flex-wrap items-center gap-2 border-b pb-4">
       <Button
         variant="outline"
         size="sm"
         onClick={handleReply}
-        className="gap-2"
+        className="gap-2 min-h-[44px]"
       >
         <Reply className="h-4 w-4" />
-        Reply
+        <span className="hidden sm:inline">Reply</span>
+        <span className="sm:hidden">Reply</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
         onClick={handleReplyAll}
-        className="gap-2"
+        className="gap-2 min-h-[44px]"
       >
         <ReplyAll className="h-4 w-4" />
-        Reply All
+        <span className="hidden sm:inline">Reply All</span>
+        <span className="sm:hidden">All</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
         onClick={handleForward}
-        className="gap-2"
+        className="gap-2 min-h-[44px]"
       >
         <Forward className="h-4 w-4" />
-        Forward
+        <span className="hidden sm:inline">Forward</span>
+        <span className="sm:hidden">Fwd</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
         onClick={handleSnooze}
-        className="gap-2"
+        className="gap-2 min-h-[44px]"
       >
         <Clock className="h-4 w-4" />
-        Snooze
+        <span className="hidden sm:inline">Snooze</span>
+        <span className="sm:hidden sr-only">Snooze</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
         onClick={handlePrint}
-        className="gap-2"
+        className="gap-2 min-h-[44px]"
         title="Print email"
       >
         <Printer className="h-4 w-4" />
-        Print
+        <span className="hidden sm:inline">Print</span>
+        <span className="sm:hidden sr-only">Print</span>
       </Button>
 
       <Button
         variant="outline"
         size="sm"
         onClick={handleBlockSender}
-        className="gap-2"
+        className="gap-2 min-h-[44px]"
         title="Block sender"
       >
         <Ban className="h-4 w-4" />
-        Block
+        <span className="hidden sm:inline">Block</span>
+        <span className="sm:hidden sr-only">Block</span>
       </Button>
 
       {/* Phase 6, Task 123: AI Extract Event */}
