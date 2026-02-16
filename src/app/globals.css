@@ -134,6 +134,12 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
+
+  /* EMERGENCY FIX: Prevent invisible overlays from blocking clicks */
+  [data-state="closed"] {
+    pointer-events: none !important;
+    display: none !important;
+  }
 }
 
 /* Phase 6, Task 126: Print Stylesheet */
