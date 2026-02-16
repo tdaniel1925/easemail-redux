@@ -14,8 +14,6 @@ import { RealtimeIndicator } from '@/components/inbox/realtime-indicator';
 import { useRealtimeSync } from '@/hooks/use-realtime-sync';
 import { useVacation } from '@/hooks/use-vacation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { HydrationTest } from '@/components/debug/hydration-test';
-import { RouterDiagnostic } from '@/components/debug/router-diagnostic';
 
 interface InboxContentProps {
   userId: string;
@@ -64,8 +62,6 @@ export function InboxContent({ userId }: InboxContentProps) {
 
   return (
     <div className="p-8">
-      <HydrationTest />
-      <RouterDiagnostic />
       <div className="flex items-center justify-between mb-6">
         <PageHeader
           title="Inbox"
