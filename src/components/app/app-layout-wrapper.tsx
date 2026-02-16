@@ -3,6 +3,16 @@
 import { AccountProvider } from '@/contexts/account-context';
 import { ReactNode, useState, useEffect } from 'react';
 import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts-dialog';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export function AppLayoutWrapper({ children }: { children: ReactNode }) {
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -35,9 +45,11 @@ export function AppLayoutWrapper({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AccountProvider>
-      {children}
-      <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
-    </AccountProvider>
+    <QueryClientProvider client={queryClient}>
+      <AccountProvider>
+        {children}
+        <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
+      </AccountProvider>
+    </QueryClientProvider>
   );
 }
