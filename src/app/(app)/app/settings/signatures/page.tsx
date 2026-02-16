@@ -114,7 +114,7 @@ export default function SignaturesPage() {
             {!isLoading && signatures.length === 0 && (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground mb-4">
-                  You haven't created any signatures yet
+                  You haven&apos;t created any signatures yet
                 </p>
                 <Button onClick={handleNewSignature}>
                   <Plus className="h-4 w-4 mr-2" />

@@ -1,7 +1,16 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, Page } from '@playwright/test';
+
+// Define custom fixtures interfaces
+interface AuthenticatedFixtures {
+  authenticatedPage: Page;
+}
+
+interface AuthenticatedAdminFixtures {
+  authenticatedAdminPage: Page;
+}
 
 // Extend base test with authenticated context
-const test = base.extend({
+const test = base.extend<AuthenticatedFixtures>({
   authenticatedPage: async ({ page }, use) => {
     // Navigate to signin page
     await page.goto('/auth/signin');
@@ -191,7 +200,7 @@ test.describe('Multi-Account Support', () => {
 });
 
 // Admin tests - use admin credentials
-const adminTest = base.extend({
+const adminTest = base.extend<AuthenticatedAdminFixtures>({
   authenticatedAdminPage: async ({ page }, use) => {
     // Navigate to signin page
     await page.goto('/auth/signin');

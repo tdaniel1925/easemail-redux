@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { SmartInbox } from '@/components/inbox/smart-inbox';
+import { MessageRowSkeleton } from '@/components/inbox/message-row-skeleton';
 import { RefreshButton } from '@/components/inbox/refresh-button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/layout/empty-state';
@@ -92,8 +93,8 @@ export function InboxContent({ userId }: InboxContentProps) {
       )}
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-muted-foreground">Loading inbox...</p>
+        <div className="flex flex-col gap-2">
+          <MessageRowSkeleton count={8} />
         </div>
       ) : hasMessages ? (
         <SmartInbox userId={userId} />

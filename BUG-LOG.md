@@ -1,7 +1,7 @@
 # BUG-LOG.md — EaseMail Redux v2
 
 **Created**: February 15, 2026 (Phase 8A)
-**Last Updated**: February 15, 2026
+**Last Updated**: February 15, 2026 (Phase 8B complete)
 
 ---
 
@@ -299,6 +299,64 @@ Auto-saving draft...
 6. ⏳ Add error handling to server actions (Task 178)
 7. ⏳ Verify all fixes (Task 179)
 8. ⏳ Test mobile responsiveness (Tasks 180-189)
+
+---
+
+## PHASE 8B ADDITIONS
+
+### Phase 8B: Dark Mode + UX Polish
+**Completed**: February 15, 2026
+**Scope**: Verify dark mode, add loading/empty states
+
+#### Issues Found and Resolved:
+
+**Issue #11: Hardcoded color in message-row.tsx**
+**Severity:** LOW
+**Location:** src/components/inbox/message-row.tsx:52
+**Resolution:** Changed `border-l-[#FF7F50]` to `border-l-orange-500 dark:border-l-orange-400`
+**Status:** ✅ RESOLVED
+
+**Issue #12: TypeScript errors in Playwright tests**
+**Severity:** MEDIUM
+**Location:** tests/e2e/multi-account.spec.ts
+**Resolution:** Added proper TypeScript fixture interfaces (AuthenticatedFixtures, AuthenticatedAdminFixtures)
+**Status:** ✅ RESOLVED
+
+**Issue #13: ESLint error in signatures page**
+**Severity:** LOW
+**Location:** src/app/(app)/app/settings/signatures/page.tsx:117
+**Resolution:** Escaped apostrophe: `You haven't` → `You haven&apos;t`
+**Status:** ✅ RESOLVED
+
+#### UX Improvements Made:
+
+1. ✅ **Loading Skeletons Added**
+   - Created MessageRowSkeleton component
+   - Added to inbox, sent, and folder views
+   - Replaces "Loading..." text with animated skeleton UI
+
+2. ✅ **Composer Loading Enhanced**
+   - Added Loader2 spinning icon when sending
+   - Disabled all form inputs while sending
+   - Disabled Send button while uploading attachments
+
+3. ✅ **Empty States Verified**
+   - All pages already have proper empty states
+   - Consistent use of EmptyState component
+   - No work needed
+
+4. ✅ **AI Loading States Verified**
+   - All AI features already have comprehensive loading states
+   - Dictate, Remix, and Extract Event all show spinners
+   - No work needed
+
+#### Verification Results:
+
+- ✅ TypeScript: 0 errors (src/ and tests/)
+- ✅ Production Build: SUCCESS (51 pages built)
+- ✅ Dark Mode: Fully variable-based (1 hardcoded color fixed)
+- ✅ Loading States: All critical paths covered
+- ✅ Empty States: All data views covered
 
 ---
 

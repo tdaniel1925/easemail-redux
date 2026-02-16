@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MessageRow } from './message-row';
+import { MessageRowSkeleton } from './message-row-skeleton';
 import { createClient } from '@/lib/supabase/client';
 import type { Message } from '@/types/message';
 import { Card } from '@/components/ui/card';
@@ -102,8 +103,8 @@ export function FolderView({ userId, folderType, folderId }: FolderViewProps) {
 
   if (!selectedAccountId || loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="text-muted-foreground">Loading messages...</p>
+      <div className="flex flex-col gap-2">
+        <MessageRowSkeleton count={8} />
       </div>
     );
   }

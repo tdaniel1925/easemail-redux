@@ -49,7 +49,7 @@ export function MessageRow({ message, isPriority, threadCount }: MessageRowProps
       className={cn(
         'group flex w-full items-start gap-3 rounded-lg border-l-4 px-4 py-3 min-h-[60px] text-left transition-colors hover:bg-accent',
         isPriority
-          ? 'border-l-[#FF7F50]' // coral accent for priority
+          ? 'border-l-orange-500 dark:border-l-orange-400' // Priority indicator (coral/orange)
           : 'border-l-transparent',
         message.is_unread ? 'bg-primary/5' : 'bg-background'
       )}

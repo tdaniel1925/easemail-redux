@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Send, Save, Mail } from 'lucide-react';
+import { X, Send, Save, Mail, Loader2 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { toast } from 'sonner';
@@ -325,6 +325,7 @@ export function EmailComposer({
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="recipient@example.com"
                 className="flex-1"
+                disabled={sending}
               />
               <div className="flex gap-2">
                 <Button
@@ -360,6 +361,7 @@ export function EmailComposer({
                 onChange={(e) => setCc(e.target.value)}
                 placeholder="cc@example.com"
                 className="flex-1"
+                disabled={sending}
               />
             </div>
           )}
@@ -377,6 +379,7 @@ export function EmailComposer({
                 onChange={(e) => setBcc(e.target.value)}
                 placeholder="bcc@example.com"
                 className="flex-1"
+                disabled={sending}
               />
             </div>
           )}
@@ -393,6 +396,7 @@ export function EmailComposer({
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Email subject"
               className="flex-1"
+              disabled={sending}
             />
           </div>
 
@@ -449,11 +453,20 @@ export function EmailComposer({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-t p-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
           <div className="flex gap-2 w-full md:w-auto">
-            <Button onClick={handleSend} disabled={sending} className="flex-1 md:flex-none">
-              <Send className="mr-2 h-4 w-4" />
-              {sending ? 'Sending...' : 'Send'}
+            <Button onClick={handleSend} disabled={sending || isUploading} className="flex-1 md:flex-none">
+              {sending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Send
+                </>
+              )}
             </Button>
-            <Button variant="outline" onClick={saveDraft} className="flex-1 md:flex-none">
+            <Button variant="outline" onClick={saveDraft} disabled={sending} className="flex-1 md:flex-none">
               <Save className="mr-2 h-4 w-4" />
               Save Draft
             </Button>

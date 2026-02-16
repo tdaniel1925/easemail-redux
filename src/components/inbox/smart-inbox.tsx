@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MessageRow } from './message-row';
+import { MessageRowSkeleton } from './message-row-skeleton';
 import { GatekeeperCard } from './gatekeeper-card';
 import { createClient } from '@/lib/supabase/client';
 import type { Message } from '@/types/message';
@@ -282,8 +283,8 @@ export function SmartInbox({ userId }: SmartInboxProps) {
 
   if (!selectedAccountId || loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="text-muted-foreground">Loading inbox...</p>
+      <div className="flex flex-col gap-2">
+        <MessageRowSkeleton count={8} />
       </div>
     );
   }
