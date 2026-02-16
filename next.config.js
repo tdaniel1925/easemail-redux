@@ -31,4 +31,6 @@ const sentryWebpackPluginOptions = {
   authToken: process.env.SENTRY_AUTH_TOKEN,
 };
 
-module.exports = withBundleAnalyzer(withSentryConfig(nextConfig, sentryWebpackPluginOptions));
+// TEMPORARILY REMOVED SENTRY TO DEBUG NAVIGATION ISSUE
+// module.exports = withBundleAnalyzer(withSentryConfig(nextConfig, sentryWebpackPluginOptions));
+module.exports = withBundleAnalyzer(nextConfig);
