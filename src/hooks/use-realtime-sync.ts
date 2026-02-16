@@ -57,8 +57,9 @@ export function useRealtimeSync(
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
-  const maxReconnectAttempts = 5;
-  const reconnectDelay = 3000; // 3 seconds
+  const maxReconnectAttempts = 3; // Reduced from 5 to 3
+  const baseReconnectDelay = 5000; // Increased from 3 to 5 seconds
+  const hasGivenUp = useRef(false);
 
   /**
    * Connect to SSE stream
@@ -82,6 +83,8 @@ export function useRealtimeSync(
           lastSync: new Date(data.timestamp),
         }));
         reconnectAttempts.current = 0;
+        hasGivenUp.current = false;
+        console.log('[SSE] Real-time sync connected');
       });
 
       // Message event (new email or update)
@@ -111,7 +114,11 @@ export function useRealtimeSync(
 
       // Error handling
       eventSource.onerror = (error) => {
-        console.error('[SSE] Connection error:', error);
+        // Don't spam console if we've already given up
+        if (!hasGivenUp.current) {
+          console.warn('[SSE] Connection error - real-time updates temporarily unavailable');
+        }
+
         setState((prev) => ({
           ...prev,
           connected: false,
@@ -119,18 +126,20 @@ export function useRealtimeSync(
         }));
 
         // Attempt reconnection with exponential backoff
-        if (reconnectAttempts.current < maxReconnectAttempts) {
+        if (!hasGivenUp.current && reconnectAttempts.current < maxReconnectAttempts) {
           reconnectAttempts.current++;
-          const delay = reconnectDelay * reconnectAttempts.current;
+          // Exponential backoff: 5s, 10s, 15s
+          const delay = baseReconnectDelay * reconnectAttempts.current;
 
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, delay);
-        } else {
-          console.error('[SSE] Max reconnect attempts reached');
+        } else if (!hasGivenUp.current) {
+          hasGivenUp.current = true;
+          console.warn('[SSE] Real-time sync unavailable - falling back to manual refresh');
           setState((prev) => ({
             ...prev,
-            error: 'Failed to reconnect after multiple attempts',
+            error: 'Real-time sync unavailable (use refresh button for updates)',
           }));
         }
 
@@ -173,6 +182,7 @@ export function useRealtimeSync(
    */
   const resetReconnect = useCallback(() => {
     reconnectAttempts.current = 0;
+    hasGivenUp.current = false;
   }, []);
 
   // Auto-connect on mount if enabled
