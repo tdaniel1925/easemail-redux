@@ -63,7 +63,7 @@ export async function handleVacationAutoReply(message: Message): Promise<void> {
       .maybeSingle();
 
     if (existingReply) {
-      console.log(`[Vacation] Already replied to ${message.from_email}, skipping`);
+      console.warn(`[Vacation] Already replied to ${message.from_email}, skipping`);
       return;
     }
 
@@ -126,7 +126,7 @@ export async function handleVacationAutoReply(message: Message): Promise<void> {
       console.error('[Vacation] Failed to log event:', eventError);
     }
 
-    console.log(`[Vacation] Auto-reply sent to ${message.from_email}`);
+    console.warn(`[Vacation] Auto-reply sent to ${message.from_email}`);
   } catch (error) {
     console.error('[Vacation] Auto-reply failed:', error);
     // Don't throw - vacation auto-reply failure shouldn't break email sync

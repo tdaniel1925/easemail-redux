@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
           } as any)
           .eq('id', emailAccountId);
 
-        console.log('[Google OAuth] Webhook subscription created:', subscriptionResult.historyId);
+        console.warn('[Google OAuth] Webhook subscription created:', subscriptionResult.historyId);
       }
     } catch (webhookError) {
       console.error('[Google OAuth] Failed to create webhook subscription (non-critical):', webhookError);

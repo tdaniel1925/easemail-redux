@@ -63,15 +63,15 @@ export function MessageActions({ message, onReply, onReplyAll, onForward, onSnoo
 
   // Future phase handlers
   const handleArchive = () => {
-    console.log('Archive clicked - to be implemented in future phase');
+    // Archive clicked - to be implemented in future phase
   };
 
   const handleTrash = () => {
-    console.log('Trash clicked - to be implemented in future phase');
+    // Trash clicked - to be implemented in future phase
   };
 
   const handleStar = () => {
-    console.log('Star clicked - to be implemented in future phase');
+    // Star clicked - to be implemented in future phase
   };
 
   return (

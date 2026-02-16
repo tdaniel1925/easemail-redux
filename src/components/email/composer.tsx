@@ -273,7 +273,7 @@ export function EmailComposer({
   };
 
   return (
-    <Card className="fixed inset-4 z-50 flex flex-col bg-background shadow-2xl">
+    <Card className="fixed inset-0 md:inset-4 z-50 flex flex-col bg-background shadow-2xl md:rounded-lg rounded-none">
       <div className="flex items-center justify-between border-b p-4">
         <h2 className="text-lg font-semibold">New Message</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -314,8 +314,8 @@ export function EmailComposer({
 
           {/* To Field */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="to" className="min-w-[60px]">
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <Label htmlFor="to" className="min-w-[60px] text-sm font-medium">
                 To:
               </Label>
               <Input
@@ -326,27 +326,31 @@ export function EmailComposer({
                 placeholder="recipient@example.com"
                 className="flex-1"
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCc(!showCc)}
-              >
-                Cc
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowBcc(!showBcc)}
-              >
-                Bcc
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCc(!showCc)}
+                  className="flex-1 md:flex-none"
+                >
+                  Cc
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowBcc(!showBcc)}
+                  className="flex-1 md:flex-none"
+                >
+                  Bcc
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Cc Field */}
           {showCc && (
-            <div className="flex items-center gap-2">
-              <Label htmlFor="cc" className="min-w-[60px]">
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <Label htmlFor="cc" className="min-w-[60px] text-sm font-medium">
                 Cc:
               </Label>
               <Input
@@ -362,8 +366,8 @@ export function EmailComposer({
 
           {/* Bcc Field */}
           {showBcc && (
-            <div className="flex items-center gap-2">
-              <Label htmlFor="bcc" className="min-w-[60px]">
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <Label htmlFor="bcc" className="min-w-[60px] text-sm font-medium">
                 Bcc:
               </Label>
               <Input
@@ -378,8 +382,8 @@ export function EmailComposer({
           )}
 
           {/* Subject Field */}
-          <div className="flex items-center gap-2">
-            <Label htmlFor="subject" className="min-w-[60px]">
+          <div className="flex flex-col md:flex-row md:items-center gap-2">
+            <Label htmlFor="subject" className="min-w-[60px] text-sm font-medium">
               Subject:
             </Label>
             <Input
@@ -442,14 +446,14 @@ export function EmailComposer({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between border-t p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            <Button onClick={handleSend} disabled={sending}>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-t p-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
+          <div className="flex gap-2 w-full md:w-auto">
+            <Button onClick={handleSend} disabled={sending} className="flex-1 md:flex-none">
               <Send className="mr-2 h-4 w-4" />
               {sending ? 'Sending...' : 'Send'}
             </Button>
-            <Button variant="outline" onClick={saveDraft}>
+            <Button variant="outline" onClick={saveDraft} className="flex-1 md:flex-none">
               <Save className="mr-2 h-4 w-4" />
               Save Draft
             </Button>
@@ -468,7 +472,7 @@ export function EmailComposer({
             </label>
           </div>
         </div>
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose} className="w-full md:w-auto">
           Discard
         </Button>
       </div>

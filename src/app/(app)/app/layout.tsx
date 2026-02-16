@@ -11,6 +11,7 @@ import { NotificationBell } from '@/components/notifications/notification-bell';
 import { ShortcutsProvider } from '@/components/keyboard/shortcuts-provider';
 import { AppLayoutWrapper } from '@/components/app/app-layout-wrapper';
 import { AccountSwitcher } from '@/components/app/account-switcher';
+import { MobileSidebar } from '@/components/app/mobile-sidebar';
 import { designTokens } from '@/lib/design-tokens';
 
 export default async function AppLayout({
@@ -39,8 +40,8 @@ export default async function AppLayout({
     <AppLayoutWrapper>
       <ShortcutsProvider>
         <div className="flex min-h-screen">
-          {/* Main Sidebar */}
-          <aside className="w-64 border-r border-border bg-card p-6">
+          {/* Desktop Sidebar - Hidden on mobile */}
+          <aside className="hidden md:block w-64 border-r border-border bg-card p-6">
             <div className="mb-8 flex items-center justify-between">
               <div>
                 <h1 className={designTokens.typography.sectionHeading}>EaseMail</h1>
@@ -63,7 +64,18 @@ export default async function AppLayout({
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto">
+            {/* Mobile Header with Hamburger */}
+            <header className="md:hidden sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
+              <div className="flex items-center justify-between">
+                <MobileSidebar userEmail={(profile as any)?.email} />
+                <h1 className={designTokens.typography.sectionHeading}>EaseMail</h1>
+                <NotificationBell />
+              </div>
+            </header>
+
+            {children}
+          </main>
         </div>
       </ShortcutsProvider>
     </AppLayoutWrapper>

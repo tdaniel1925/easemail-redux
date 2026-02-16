@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
           } as any)
           .eq('id', emailAccountId);
 
-        console.log('[Microsoft OAuth] Webhook subscription created:', subscriptionResult.subscriptionId);
+        console.warn('[Microsoft OAuth] Webhook subscription created:', subscriptionResult.subscriptionId);
       }
     } catch (webhookError) {
       console.error('[Microsoft OAuth] Failed to create webhook subscription (non-critical):', webhookError);
