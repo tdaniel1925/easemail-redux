@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Star, Paperclip, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/message';
@@ -13,10 +12,9 @@ interface MessageRowProps {
 }
 
 export function MessageRow({ message, isPriority, threadCount }: MessageRowProps) {
-  const router = useRouter();
-
   function handleClick() {
-    router.push(`/app/inbox/${message.id}`);
+    // EMERGENCY WORKAROUND: Using hard navigation since Next.js router is broken
+    window.location.href = `/app/inbox/${message.id}`;
   }
 
   function formatDate(isoString: string): string {

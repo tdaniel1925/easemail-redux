@@ -5,7 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { AppNav } from '@/components/app/app-nav';
+import { AppNavHardNav } from '@/components/app/app-nav-hardnav';
 import { SignOutButton } from '@/components/auth/signout-button';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { ShortcutsProvider } from '@/components/keyboard/shortcuts-provider';
@@ -59,7 +59,7 @@ export default async function AppLayout({
               <AccountSwitcher />
             </div>
 
-            <AppNav />
+            <AppNavHardNav />
 
             {/* User Menu */}
             <div className="mt-8 pt-8 border-t border-border">
