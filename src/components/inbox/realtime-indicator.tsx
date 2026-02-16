@@ -16,13 +16,22 @@ export interface RealtimeIndicatorProps {
 export function RealtimeIndicator({ showText = false }: RealtimeIndicatorProps) {
   const { connected, lastSync, error } = useRealtimeSync();
 
-  if (error) {
+  // Don't show error state if real-time sync is unavailable (graceful degradation)
+  // The app works fine with manual refresh
+  const isGracefulError = error?.includes('unavailable') || error?.includes('use refresh button');
+
+  if (error && !isGracefulError) {
     return (
       <div className="flex items-center gap-2 text-sm text-red-600">
         <WifiOff className="h-4 w-4" />
         {showText && <span>Offline</span>}
       </div>
     );
+  }
+
+  // If gracefully degraded or not connected but no hard error, just don't show anything
+  if (error && isGracefulError) {
+    return null; // App works fine, no need to alarm the user
   }
 
   if (!connected) {
