@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS queued_sends (
 
   -- Threading headers (for replies/forwards)
   in_reply_to TEXT, -- Message-ID being replied to
-  references TEXT, -- References header for threading
+  "references" TEXT, -- References header for threading
 
   -- Scheduling
   send_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '5 seconds'), -- When to actually send

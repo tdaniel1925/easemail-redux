@@ -3,9 +3,9 @@
 
 -- Create vacation_responder table
 CREATE TABLE IF NOT EXISTS vacation_responder (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  account_id UUID NOT NULL REFERENCES connected_accounts(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES email_accounts(id) ON DELETE CASCADE,
   enabled BOOLEAN NOT NULL DEFAULT false,
   start_date TIMESTAMPTZ,
   end_date TIMESTAMPTZ,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS vacation_responder (
 
 -- Create vacation_replies table to track who we've auto-replied to
 CREATE TABLE IF NOT EXISTS vacation_replies (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   vacation_responder_id UUID NOT NULL REFERENCES vacation_responder(id) ON DELETE CASCADE,
   sender_email TEXT NOT NULL,
   replied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -57,7 +57,7 @@ CREATE POLICY "Users can create vacation responders"
   WITH CHECK (
     auth.uid() = user_id
     AND EXISTS (
-      SELECT 1 FROM connected_accounts
+      SELECT 1 FROM email_accounts
       WHERE id = account_id AND user_id = auth.uid()
     )
   );
@@ -105,11 +105,10 @@ ALTER TABLE messages
 -- Add index for read receipts
 CREATE INDEX idx_messages_read_receipt ON messages(read_receipt_enabled) WHERE read_receipt_enabled = true;
 
--- Add event types for vacation and read receipts
-INSERT INTO event_types (name, description) VALUES
-  ('email.vacation_auto_reply', 'Vacation auto-reply sent'),
-  ('email.read_receipt_opened', 'Email read receipt tracked')
-ON CONFLICT (name) DO NOTHING;
+-- Event types are used dynamically in the events table
+-- No pre-registration needed:
+-- - 'email.vacation_auto_reply': Vacation auto-reply sent
+-- - 'email.read_receipt_opened': Email read receipt tracked
 
 -- Grant permissions
 GRANT ALL ON vacation_responder TO authenticated;
