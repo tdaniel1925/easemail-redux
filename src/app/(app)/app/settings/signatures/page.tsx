@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SignatureForm } from '@/components/settings/signature-form';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useSignature } from '@/hooks/use-signature';
 import { useAccount } from '@/hooks/use-account';
 import { Plus, Edit, Trash2, Star } from 'lucide-react';
@@ -19,6 +20,8 @@ export default function SignaturesPage() {
   const { selectedAccountId } = useAccount();
   const [showForm, setShowForm] = useState(false);
   const [editingSignature, setEditingSignature] = useState<Signature | undefined>(undefined);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [signatureToDelete, setSignatureToDelete] = useState<string | null>(null);
 
   const {
     signatures,
@@ -36,16 +39,21 @@ export default function SignaturesPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (signatureId: string) => {
-    if (!confirm('Are you sure you want to delete this signature?')) {
-      return;
-    }
+  const handleDeleteClick = (signatureId: string) => {
+    setSignatureToDelete(signatureId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!signatureToDelete) return;
 
     try {
-      await deleteSignature(signatureId);
+      await deleteSignature(signatureToDelete);
       toast.success('Signature deleted');
     } catch (error) {
       toast.error('Failed to delete signature');
+    } finally {
+      setSignatureToDelete(null);
     }
   };
 
@@ -165,7 +173,7 @@ export default function SignaturesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(signature.id)}
+                          onClick={() => handleDeleteClick(signature.id)}
                           disabled={isDeleting}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -178,6 +186,18 @@ export default function SignaturesPage() {
             )}
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          title="Delete Signature"
+          description="Are you sure you want to delete this signature? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+          onConfirm={handleDeleteConfirm}
+        />
       </div>
     </div>
   );

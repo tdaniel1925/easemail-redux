@@ -10,6 +10,7 @@ import { MessageBody } from './message-body';
 import { MessageActions } from './message-actions';
 import { ReplyComposer } from '@/components/email/reply-composer';
 import { SnoozeDialog } from './snooze-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useSnooze } from '@/hooks/use-snooze';
 import { useBlockSender } from '@/hooks/use-block-sender';
 import { useRouter } from 'next/navigation';
@@ -22,6 +23,7 @@ interface MessageViewProps {
 export function MessageView({ message }: MessageViewProps) {
   const [replyMode, setReplyMode] = useState<'reply' | 'replyAll' | 'forward' | null>(null);
   const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const { snoozeEmail, isSnoozing } = useSnooze();
   const { blockSender } = useBlockSender();
   const router = useRouter();
@@ -64,7 +66,11 @@ export function MessageView({ message }: MessageViewProps) {
   };
 
   // Phase 6, Task 133: Block sender handler
-  const handleBlockSender = async () => {
+  const handleBlockSenderClick = () => {
+    setShowBlockConfirm(true);
+  };
+
+  const handleBlockSenderConfirm = async () => {
     const success = await blockSender(message.from_email);
     if (success) {
       // Refresh to hide emails from blocked sender
@@ -87,7 +93,7 @@ export function MessageView({ message }: MessageViewProps) {
           onForward={handleForward}
           onSnooze={handleSnooze}
           onPrint={handlePrint}
-          onBlockSender={handleBlockSender}
+          onBlockSender={handleBlockSenderClick}
         />
       </div>
 
@@ -113,6 +119,18 @@ export function MessageView({ message }: MessageViewProps) {
         onOpenChange={setShowSnoozeDialog}
         onSnooze={handleSnoozeSubmit}
         isLoading={isSnoozing}
+      />
+
+      {/* Block sender confirmation */}
+      <ConfirmDialog
+        open={showBlockConfirm}
+        onOpenChange={setShowBlockConfirm}
+        title="Block Sender"
+        description={`Are you sure you want to block ${message.from_email}? You will no longer receive emails from this sender.`}
+        confirmText="Block"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleBlockSenderConfirm}
       />
     </div>
   );

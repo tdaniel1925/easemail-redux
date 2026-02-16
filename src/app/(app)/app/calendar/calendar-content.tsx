@@ -116,6 +116,10 @@ export function CalendarContent() {
   const handleEventCreated = (event: CalendarEvent) => {
     setEvents((prev) => [...prev, event]);
     setShowCreateDialog(false);
+    toast.success('Event created!', {
+      description: 'Your calendar event has been added successfully.',
+      duration: 3000,
+    });
   };
 
   const handleEventUpdated = (event: CalendarEvent) => {

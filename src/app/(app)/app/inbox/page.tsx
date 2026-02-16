@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { InboxContent } from './inbox-content';
+import { WelcomeScreen } from '@/components/onboarding/welcome-screen';
 import { fixFolderTypes } from '@/lib/sync/fix-folder-types';
 
 export default async function InboxPage() {
@@ -28,14 +29,16 @@ export default async function InboxPage() {
 
   console.warn('📧 Accounts query result:', { accounts, accountsError });
 
-  if (accounts && accounts.length > 0) {
-    console.warn(`✅ Found ${accounts.length} email account(s), running fixFolderTypes`);
-    for (const account of accounts) {
-      const result = await fixFolderTypes(account.id);
-      console.warn('🔧 fixFolderTypes result:', result);
-    }
-  } else {
-    console.warn('❌ No email accounts found');
+  // Show welcome screen if user has no email accounts
+  if (!accounts || accounts.length === 0) {
+    console.warn('❌ No email accounts found - showing welcome screen');
+    return <WelcomeScreen />;
+  }
+
+  console.warn(`✅ Found ${accounts.length} email account(s), running fixFolderTypes`);
+  for (const account of accounts) {
+    const result = await fixFolderTypes(account.id);
+    console.warn('🔧 fixFolderTypes result:', result);
   }
 
   return <InboxContent userId={user.id} />;
